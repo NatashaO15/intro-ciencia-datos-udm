@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesión 1 · Motivación</title>
+<style>
+  :root{
+    --bg: #0f1428;
+    --bg-2: #161c38;
+    --text: #f4f1ea;
+    --text-dim: #b7bedb;
+    --accent: #f2a94b;
+    --accent-2: #5eeacb;
+    --card: rgba(255,255,255,0.06);
+    --card-border: rgba(255,255,255,0.14);
+    --danger: #ef6a6a;
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    overflow: hidden;
+  }
+  #deck{
+    position: relative;
+    width: 100vw; height: 100vh;
+  }
+  .slide{
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 6vh 8vw 9vh 8vw;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(94,234,203,0.10), transparent 60%),
+      radial-gradient(1000px 700px at 100% 110%, rgba(242,169,75,0.10), transparent 55%),
+      var(--bg);
+  }
+  .slide.active{ display:flex; }
+  .slide-inner{
+    max-width: 1150px;
+    width: 100%;
+  }
+  .slide-badge{
+    position: absolute;
+    top: 6vh; right: 6vw;
+    width: clamp(56px, 7vw, 88px); height: clamp(56px, 7vw, 88px);
+    border-radius: 20px;
+    background: var(--card); border: 1px solid var(--card-border);
+    display:flex; align-items:center; justify-content:center;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    z-index: 2;
+    line-height: 1;
+  }
+  .kicker{
+    display:inline-flex;
+    align-items:center;
+    gap:.5em;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    font-size: clamp(0.85rem, 1.1vw, 1rem);
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 1.1rem;
+  }
+  .kicker::before{
+    content:"";
+    width: 1.6em; height: 2px;
+    background: var(--accent);
+    display:inline-block;
+  }
+  h1{
+    font-size: clamp(2.1rem, 4.4vw, 3.4rem);
+    line-height: 1.12;
+    margin: 0 0 1.1rem 0;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  h1 em{ color: var(--accent-2); font-style: normal; }
+  .term-flag{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 800;
+    font-size: 0.45em;
+    padding: 0.15em 0.45em;
+    border-radius: 999px;
+    vertical-align: super;
+    margin-left: 0.2em;
+    line-height: 1;
+  }
+  .subtitle{
+    font-size: clamp(1.05rem, 1.7vw, 1.35rem);
+    color: var(--text-dim);
+    margin: -0.4rem 0 2rem 0;
+    max-width: 46ch;
+  }
+  .body{
+    font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+    line-height: 1.55;
+    color: var(--text);
+  }
+  .body p{ margin: 0 0 1rem 0; }
+  ul.points{
+    list-style: none;
+    margin: 0; padding: 0;
+    display:flex; flex-direction:column; gap: .85rem;
+  }
+  ul.points li{
+    font-size: clamp(1.0rem, 1.55vw, 1.3rem);
+    line-height: 1.5;
+    padding-left: 1.6em;
+    position: relative;
+  }
+  ul.points li::before{
+    content: "→";
+    position: absolute; left: 0; top: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  ul.points.check li::before{ content: "✓"; color: var(--accent-2); }
+  .frag{
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity .4s ease, transform .4s ease;
+  }
+  .frag.shown{ opacity: 1; transform: translateY(0); }
+  .grid{
+    display:grid;
+    gap: 1.1rem;
+  }
+  .grid.cols-2{ grid-template-columns: 1fr 1fr; }
+  .grid.cols-3{ grid-template-columns: repeat(3, 1fr); }
+  .card{
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 1.2rem 1.4rem;
+  }
+  .card h3{
+    margin: 0 0 .4rem 0;
+    font-size: clamp(1rem, 1.4vw, 1.15rem);
+    color: var(--accent-2);
+  }
+  .card p{ margin:0; font-size: clamp(0.92rem, 1.25vw, 1.05rem); color: var(--text-dim); line-height:1.45; }
+
+  /* Pipeline (slide 9) */
+  .pipeline{
+    display:flex;
+    align-items:stretch;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .pipeline .step{
+    flex: 1 1 160px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 1.1rem 1rem;
+    text-align:center;
+    display:flex; flex-direction:column; gap:.3rem; justify-content:center;
+    min-height: 110px;
+  }
+  .pipeline .step .e{
+    font-size: 1.5rem;
+  }
+  .pipeline .step .n{
+    font-size: 0.85rem; color: var(--accent); font-weight:700;
+  }
+  .pipeline .step .t{
+    font-size: clamp(0.95rem, 1.3vw, 1.1rem); font-weight:700;
+  }
+  .pipeline .arrow{
+    align-self:center;
+    color: var(--text-dim);
+    font-size: 1.6rem;
+    flex: 0 0 auto;
+  }
+
+  /* Roadmap blocks (slide 10) */
+  .blocks{ display:flex; flex-direction:column; gap: .8rem; }
+  .block{
+    display:flex; align-items:center; gap: 1.2rem;
+    background: var(--card); border:1px solid var(--card-border);
+    border-radius: 14px; padding: 1rem 1.3rem;
+  }
+  .block.today{ border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .block .tag{
+    flex: 0 0 auto;
+    font-weight: 800; font-size: clamp(1rem,1.4vw,1.2rem);
+    color: var(--bg); background: var(--accent-2);
+    border-radius: 999px; padding: .35rem .9rem;
+    white-space: nowrap;
+  }
+  .block .desc{ flex: 1 1 auto; font-size: clamp(0.95rem, 1.3vw, 1.15rem); }
+  .block .hrs{ flex: 0 0 auto; color: var(--text-dim); font-size: 0.9rem; white-space: nowrap; }
+
+  /* Timeline (slide 11) */
+  .timeline{ display:flex; gap: 0.7rem; flex-wrap: wrap; }
+  .timeline .node{
+    flex: 1 1 140px;
+    border-radius: 14px; padding: 1rem;
+    background: var(--card); border: 1px solid var(--card-border);
+    text-align:center;
+  }
+  .timeline .node.current{ border-color: var(--accent-2); box-shadow: 0 0 0 1px var(--accent-2) inset; }
+  .timeline .node .lvl{ font-size:.78rem; color: var(--accent); text-transform:uppercase; letter-spacing:.08em; font-weight:700; }
+  .timeline .node .e{ font-size: 1.3rem; }
+  .timeline .node .name{ font-size: clamp(0.85rem,1.2vw,1rem); margin-top:.3rem; font-weight:600; }
+
+  /* Day structure (slide 12) */
+  .daymap{ display:flex; flex-direction:column; gap:.55rem; }
+  .daymap .row{
+    display:flex; align-items:center; gap: 1rem;
+    background: var(--card); border:1px solid var(--card-border);
+    border-radius: 10px; padding: .65rem 1rem;
+  }
+  .daymap .row .dot{ width:10px; height:10px; border-radius:50%; background: var(--accent-2); flex:0 0 auto; }
+  .daymap .row.rest .dot{ background: var(--text-dim); }
+  .daymap .row .label{ flex:1 1 auto; font-size: clamp(0.9rem,1.2vw,1.05rem); }
+  .daymap .row .mins{ color: var(--text-dim); font-size:.85rem; white-space:nowrap; }
+
+  .quote{
+    font-size: clamp(1.4rem, 2.6vw, 2rem);
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--text);
+    border-left: 4px solid var(--accent);
+    padding-left: 1.1rem;
+    margin: 1.4rem 0;
+  }
+
+  /* Terminal demo (slide "la terminal") */
+  .term{
+    background: #0b0e1a;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 640px;
+    width: 100%;
+    margin: 1.3rem auto 0 auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  }
+  .term-bar{
+    display:flex; align-items:center; gap:.4rem;
+    background:#161b2e; padding:.55rem .8rem;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .term-dot{ width:11px; height:11px; border-radius:50%; }
+  .term-dot.r{ background:#ef6a6a; }
+  .term-dot.y{ background:#f2c94b; }
+  .term-dot.g{ background:#5eeacb; }
+  .term-title{ margin-left:.5rem; font-size:.75rem; color: var(--text-dim); }
+  .term-body{
+    padding: 1.1rem 1.2rem 1.3rem 1.2rem; min-height: 130px; text-align:left;
+    font-family: Menlo, Consolas, "SFMono-Regular", monospace;
+    font-size: clamp(0.85rem, 1.2vw, 1rem);
+  }
+  .term-row{ display:flex; gap:.5rem; margin-bottom:.35rem; flex-wrap:wrap; }
+  .term-row .prompt{ color: var(--accent-2); font-weight:700; }
+  .term-row .typed{ color: var(--text); white-space:pre-wrap; }
+  .term-out{ color: var(--text-dim); margin: 0 0 .8rem 1.3rem; }
+  .term-cursor{
+    display:inline-block; width:.5em; background: var(--text); margin-left:2px;
+    animation: term-blink 1s steps(1) infinite;
+  }
+  @keyframes term-blink{ 50%{ opacity:0; } }
+  .term-replay{
+    display:block; margin: 1rem auto 0 auto;
+    background: var(--card); border:1px solid var(--card-border); color: var(--text);
+    border-radius: 999px; padding: .5rem 1.1rem; font-size: .85rem; cursor:pointer;
+  }
+  .term-replay:hover{ border-color: var(--accent); }
+  .term-caption{ text-align:center; color: var(--text-dim); font-size: .9rem; margin-top: .8rem; }
+
+  /* Chrome: progress bar, footer, nav, notes */
+  #progress{
+    position:fixed; top:0; left:0; height:4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    width:0%; z-index: 50; transition: width .25s ease;
+  }
+  #footer{
+    position:fixed; bottom:0; left:0; right:0;
+    height: 6vh; min-height:42px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 0 1.6rem;
+    font-size: 0.8rem; color: var(--text-dim);
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.35));
+    z-index: 40;
+  }
+  #footer .course{ opacity:.85; }
+  #footer .hint{ opacity:.6; }
+  #counter{ font-variant-numeric: tabular-nums; }
+
+  .navzone{
+    position:fixed; top:0; bottom:0; width: 64px; z-index: 45;
+    background: transparent; border:none; cursor: pointer;
+    display:flex; align-items:center; justify-content:center;
+    color: var(--text-dim); opacity:0; transition: opacity .15s ease;
+    font-size: 1.6rem;
+  }
+  .navzone:hover{ opacity: 1; }
+  #prevZone{ left:0; }
+  #nextZone{ right:0; }
+
+  #toolbar{
+    position: fixed; bottom: 6vh; left: 1.2rem; z-index: 46;
+    display:flex; gap:.6rem; flex-wrap:wrap;
+  }
+  #notesToggle, #commentsToggle{
+    background: var(--card); border:1px solid var(--card-border);
+    color: var(--text); border-radius: 999px; padding: .4rem .9rem;
+    font-size: .8rem; cursor:pointer;
+  }
+  #notesToggle.active{ background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight:700; }
+  #commentsToggle.active{ background: var(--accent-2); color: var(--bg); border-color: var(--accent-2); font-weight:700; }
+
+  #notesPanel, #commentsPanel{
+    position: fixed; left:0; right:0; bottom:0;
+    max-height: 42vh; overflow-y:auto;
+    background: rgba(8,11,24,0.97);
+    padding: 1.4rem 2.2rem 1.6rem 2.2rem;
+    transform: translateY(100%);
+    transition: transform .25s ease;
+    z-index: 44;
+  }
+  #notesPanel{ border-top: 2px solid var(--accent); }
+  #commentsPanel{ border-top: 2px solid var(--accent-2); }
+  #notesPanel.open, #commentsPanel.open{ transform: translateY(0); }
+  #notesPanel h4, #commentsPanel h4{
+    margin: 0 0 .6rem 0; color: var(--accent);
+    font-size: .95rem; text-transform:uppercase; letter-spacing:.08em;
+  }
+  #commentsPanel h4{ color: var(--accent-2); }
+  #notesPanel .time{ color: var(--accent-2); font-weight:700; }
+  #notesPanel ul{ margin:.3rem 0 .8rem 1.1rem; padding:0; }
+  #notesPanel li{ margin-bottom:.35rem; line-height:1.45; font-size:.95rem; }
+  #notesPanel p{ line-height:1.5; font-size:.95rem; margin: 0 0 .6rem 0;}
+  #notesPanel .line{ color: var(--text-dim); font-style: italic; }
+
+  #commentsText{
+    width:100%; min-height: 110px; resize: vertical;
+    background: var(--bg-2); color: var(--text);
+    border: 1px solid var(--card-border); border-radius: 10px;
+    padding: .8rem .9rem; font-size: .95rem; font-family: inherit;
+    line-height: 1.5;
+  }
+  #commentsText:focus{ outline: none; border-color: var(--accent-2); }
+  .comments-actions{
+    display:flex; align-items:center; gap:.7rem; margin-top:.7rem; flex-wrap:wrap;
+  }
+  .comments-actions button{
+    background: var(--card); border:1px solid var(--card-border); color: var(--text);
+    border-radius: 999px; padding: .4rem .9rem; font-size: .8rem; cursor:pointer;
+  }
+  .comments-actions button:hover{ border-color: var(--accent-2); }
+  .comments-actions .hint{ font-size: .8rem; color: var(--text-dim); }
+
+  .notes{ display:none; }
+
+  @media (max-width: 820px){
+    .grid.cols-2, .grid.cols-3{ grid-template-columns: 1fr; }
+    .pipeline{ flex-direction:column; }
+    .pipeline .arrow{ transform: rotate(90deg); }
+    .slide-badge{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div id="deck">
+
+  <!-- 1 -->
+  <section class="slide">
+    <div class="slide-badge">👋</div>
+    <div class="slide-inner">
+      <div class="kicker">Sesión 1 · Bienvenida</div>
+      <h1>Introducción a la <em>Ciencia de Datos</em></h1>
+      <p class="subtitle">Especialización en Ciencia de Datos e Inteligencia Artificial — Universidad de Medellín</p>
+      <p class="body">Profesor(es): [Nombre profesor 1] · [Nombre profesor 2]<br>8 de septiembre, 2026</p>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p><strong>Objetivo del bloque:</strong> abrir el curso, bajar la ansiedad del salón y dejar clarísimo el mapa de lo que viene hoy y en las próximas 8 sesiones.</p>
+      <p>Preséntate a ti y menciona a tu colega, aunque no dicte esta sesión — que sepan desde el día 1 que el curso lo comparten dos profesores.</p>
+      <p class="line">«Bienvenidos a Introducción a la Ciencia de Datos. No importa si vienen de ingeniería, de salud, de mercadeo o de finanzas — todos tienen algo que aportar aquí, y todos van a salir sabiendo trabajar con datos.»</p>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide">
+    <div class="slide-badge">🙋</div>
+    <div class="slide-inner">
+      <div class="kicker">Para romper el hielo</div>
+      <h1>¿Quién está en esta sala?</h1>
+      <ul class="points">
+        <li>Levanten la mano si <strong>nunca han escrito una línea de código.</strong></li>
+        <li>Levanten la mano si <strong>usan Excel o Google Sheets todos los días</strong> en su trabajo.</li>
+        <li>Levanten la mano si <strong>vienen de un área distinta a ingeniería o sistemas.</strong></li>
+        <li>Levanten la mano si <strong>ya han trabajado con datos</strong> en su trabajo, aunque nunca lo hayan llamado "ciencia de datos".</li>
+      </ul>
+    </div>
+    <div class="notes" data-time="3 min">
+      <p><strong>Cómo facilitarlo:</strong> levanta tú la mano primero en cada pregunta para dar ejemplo y bajar la barrera.</p>
+      <ul>
+        <li>Haz una pausa breve después de cada pregunta y comenta lo que ves ("miren cuántas manos... eso es completamente normal").</li>
+        <li>Objetivo real: que el salón vea con sus propios ojos que es heterogéneo — la norma, no la excepción.</li>
+        <li>Si el grupo es tímido, empieza tú contando tu propia historia (cómo llegaste a datos, si no fue por ingeniería pura).</li>
+      </ul>
+      <p class="line">«Este curso está diseñado pensando exactamente en este grupo tan diverso que acabamos de ver.»</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide">
+    <div class="slide-badge">🧭</div>
+    <div class="slide-inner">
+      <div class="kicker">Antes de seguir…</div>
+      <h1>Esto <em>no</em> es un curso para "programadores"</h1>
+      <ul class="points check">
+        <li>La ciencia de datos es una forma de <strong>pensar</strong>, no un lenguaje de programación.</li>
+        <li>El código (Python) es la <strong>herramienta</strong>; la pregunta que quieres responder es lo que importa.</li>
+        <li>Vamos a ir <strong>despacio</strong>, con tiempo real para practicar y repetir las veces que haga falta.</li>
+        <li><strong>Nadie</strong> en este salón necesita saber programar hoy. Al final del curso, todos van a poder.</li>
+      </ul>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p><strong>Este es el mensaje ancla de toda la sesión</strong> — baja la ansiedad antes de mostrar nada técnico. Si en el rompehielo notaste caras tensas o silencio incómodo, quédate un poco más aquí.</p>
+      <p class="line">«Piensen en Excel: ya saben sacar un promedio, filtrar una columna, hacer una tabla dinámica. Lo que vamos a hacer en este curso es exactamente eso, pero con superpoderes.»</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide">
+    <div class="slide-badge">🔍</div>
+    <div class="slide-inner">
+      <div class="kicker">Motivación</div>
+      <h1>¿Qué es la ciencia de datos?</h1>
+      <p class="quote">Convertir datos crudos y desordenados en decisiones, historias y valor para una organización — o para ti mismo.</p>
+      <p class="body">Es como ser detective: los <strong>datos son las pistas</strong>, el análisis es la <strong>investigación</strong>, y contar los resultados con claridad es <strong>presentar el caso.</strong></p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Evita tecnicismos aquí — la meta es que la definición quepa en una frase que se lleven a casa.</p>
+      <p>Alternativa de analogía si el grupo tiene perfil de salud: síntomas → diagnóstico → tratamiento, igual que datos → análisis → decisión.</p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide">
+    <div class="slide-badge">🌐</div>
+    <div class="slide-inner">
+      <div class="kicker">Motivación</div>
+      <h1>¿Por qué importa, sin importar de dónde vengas?</h1>
+      <div class="grid cols-3">
+        <div class="card frag"><h3>🏥 Salud</h3><p>Predecir reingresos de pacientes, priorizar camas de UCI.</p></div>
+        <div class="card frag"><h3>🛒 Mercadeo / Retail</h3><p>Detectar clientes a punto de irse (churn), optimizar precios.</p></div>
+        <div class="card frag"><h3>💰 Finanzas</h3><p>Detectar fraude, evaluar riesgo de crédito.</p></div>
+        <div class="card frag"><h3>🏛️ Sector público</h3><p>Focalizar programas sociales, medir impacto de políticas.</p></div>
+        <div class="card frag"><h3>🚚 Operaciones</h3><p>Optimizar rutas de entrega, prever demanda.</p></div>
+        <div class="card frag"><h3>🏅 Deporte</h3><p>Analizar el rendimiento de jugadores y equipos.</p></div>
+      </div>
+    </div>
+    <div class="notes" data-time="4 min">
+      <p><strong>Las tarjetas ahora aparecen una a una</strong> con → / espacio — ve leyendo cada una en voz alta a medida que aparece, en vez de mostrar la grilla completa de un tirón.</p>
+      <p><strong>Antes de mostrar tus ejemplos, pregunta al público:</strong> «¿alguien ya usa datos en su trabajo hoy, aunque sea solo en Excel?» — deja que 2-3 personas cuenten su caso.</p>
+      <ul>
+        <li>Conecta al menos un ejemplo de la grilla con una profesión que sepas que hay en el salón.</li>
+        <li>Mensaje clave: la ciencia de datos no es un campo aparte — es una capacidad transversal que se suma a lo que cada uno ya sabe de su área.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide">
+    <div class="slide-badge">🤖</div>
+    <div class="slide-inner">
+      <div class="kicker">Una pausa importante</div>
+      <h1>¿Para qué construir bases sólidas si un <em>LLM</em><span class="term-flag">¿?</span> ya responde?</h1>
+      <p class="body">Hoy cualquiera puede abrir ChatGPT, Gemini o Claude, escribir una pregunta y copiar una respuesta en segundos.</p>
+      <p class="body"><strong>Ese no es el objetivo de este curso.</strong> Lo que vamos a construir aquí no es "saber teclear un prompt" — es entender qué significan los datos, por qué un resultado tiene sentido (o no), y para qué sirve.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p><strong>Recordatorio:</strong> es la primera vez que aparece la sigla "LLM" en el mazo — defínela antes de seguir: <em>Large Language Model</em> / modelo de lenguaje grande, un sistema entrenado con muchísimo texto para predecir y generar lenguaje natural. La vamos a seguir usando en las próximas diapositivas.</p>
+      <p><strong>Este es un mensaje central del curso, no un aparte.</strong> Vale la pena decirlo con calma, mirando al grupo.</p>
+      <p class="line">«El mundo está cambiando: ya no gana quien sabe teclear rápido un comando. Gana quien entiende lo suficiente para saber si la respuesta que le dieron tiene sentido.»</p>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide">
+    <div class="slide-badge">⚠️</div>
+    <div class="slide-inner">
+      <div class="kicker">Seamos honestos sobre estas herramientas</div>
+      <h1>Los LLMs son poderosos — pero no son oráculos</h1>
+      <ul class="points">
+        <li>Son <strong>productos de empresas</strong> (OpenAI, Google, Anthropic…) — no fuentes neutrales de verdad.</li>
+        <li>Pueden <strong>equivocarse con total seguridad</strong> — inventar datos, fechas o resultados que suenan perfectamente creíbles.</li>
+        <li>Reflejan los <strong>sesgos</strong> de los datos con los que fueron entrenados.</li>
+        <li>Sin bases propias para juzgar la respuesta, <strong>no hay forma de saber cuándo están mal.</strong></li>
+      </ul>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Si tienes a la mano un ejemplo real y breve de un LLM equivocándose con total seguridad (una fecha, una cifra, una cita inventada), cuéntalo aquí — es memorable y concreto.</p>
+      <p>Cuida el tono: el mensaje no es "no usar estas herramientas", es "no usarlas a ciegas".</p>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide">
+    <div class="slide-badge">💡</div>
+    <div class="slide-inner">
+      <div class="kicker">La habilidad que de verdad importa</div>
+      <h1>En este mundo nuevo, el conocimiento es más poder que nunca</h1>
+      <p class="quote">Saber usar estas herramientas ya no alcanza. Lo que va a marcar la diferencia es saber juzgarlas.</p>
+      <ul class="points check">
+        <li>Vamos a aprender a <strong>construir</strong> el análisis, no solo a pedirlo.</li>
+        <li>Vas a usar LLMs en este curso — es parte del mundo real — pero tu valor va a estar en poder decir <strong>"esto está bien"</strong> o <strong>"esto no tiene sentido, y así lo sé".</strong></li>
+        <li>La meta no es volverte una máquina de prompts: es entender los datos lo suficiente para <strong>juzgar cualquier herramienta</strong>, incluidas las de IA.</li>
+      </ul>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Cierra conectando con lo que viene: todo lo que van a practicar hoy y en las próximas sesiones (Pandas, EDA, visualización) es exactamente esa base de juicio propio.</p>
+      <p class="line">«De aquí en adelante, cada vez que usemos una herramienta de IA en este curso, la pregunta no va a ser '¿qué me respondió?' sino '¿cómo sé que tiene razón?'.»</p>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide">
+    <div class="slide-badge">⚙️</div>
+    <div class="slide-inner">
+      <div class="kicker">El mapa mental</div>
+      <h1>Así se ve un proyecto de datos, de principio a fin</h1>
+      <div class="pipeline">
+        <div class="step"><div class="e">📥</div><div class="n">1</div><div class="t">Datos crudos</div></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="e">🧹</div><div class="n">2</div><div class="t">Limpieza</div></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="e">🔎</div><div class="n">3</div><div class="t">Exploración (EDA)</div></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="e">📊</div><div class="n">4</div><div class="t">Visualización / Storytelling</div></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="e">✅</div><div class="n">5</div><div class="t">Decisión</div></div>
+      </div>
+      <p class="body" style="margin-top:1.4rem;">Este mapa <strong>es</strong>, literalmente, el mapa de este curso.</p>
+    </div>
+    <div class="notes" data-time="3 min">
+      <p>Explica cada caja con un ejemplo cotidiano único que recorras de principio a fin (ej: datos de ventas de una tienda de barrio).</p>
+      <p class="line">«Cada caja de este mapa es, literalmente, uno de los bloques que vamos a ver en este curso — hoy empezamos por la primera.»</p>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide">
+    <div class="slide-badge">🗺️</div>
+    <div class="slide-inner">
+      <div class="kicker">Nuestro mapa de ruta</div>
+      <h1>8 sesiones, 4 bloques</h1>
+      <div class="blocks">
+        <div class="block today">
+          <div class="tag">Bloque 1</div>
+          <div class="desc">🧹 Carga, limpieza y transformación de datos con Pandas</div>
+          <div class="hrs">Sesiones 1–2 · 8h</div>
+        </div>
+        <div class="block">
+          <div class="tag">Bloque 2</div>
+          <div class="desc">🔗 Indexación jerárquica, combinación y agrupamiento de datos</div>
+          <div class="hrs">Sesiones 3–4 · 8h</div>
+        </div>
+        <div class="block">
+          <div class="tag">Bloque 3</div>
+          <div class="desc">📈 Series de tiempo y automatización del EDA</div>
+          <div class="hrs">Sesión 5 · 4h</div>
+        </div>
+        <div class="block">
+          <div class="tag">Bloque 4</div>
+          <div class="desc">🎨 Visualización, storytelling y proyecto final de aula</div>
+          <div class="hrs">Sesiones 6–8 · 12h</div>
+        </div>
+      </div>
+      <p class="body" style="margin-top:1rem;"><strong>Hoy estamos empezando el Bloque 1.</strong></p>
+    </div>
+    <div class="notes" data-time="4 min">
+      <p>Aclara que cada sesión son 4 horas "pesadas", pero divididas en bloques dinámicos — lo van a vivir hoy mismo en la estructura del día (siguiente parte de la sesión).</p>
+      <p>El curso cierra con un proyecto de aula donde cuentan una historia con datos reales.</p>
+      <p class="line">«Al final de este curso van a poder tomar un Excel desordenado y convertirlo en un tablero que cuenta una historia clara.»</p>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide">
+    <div class="slide-badge">🎓</div>
+    <div class="slide-inner">
+      <div class="kicker">La foto completa</div>
+      <h1>Este curso es la base de todo lo que viene</h1>
+      <div class="timeline">
+        <div class="node current"><div class="lvl">Nivel 1</div><div class="e">📊</div><div class="name">Introducción a la Ciencia de Datos</div></div>
+        <div class="node"><div class="lvl">Nivel 1</div><div class="e">📐</div><div class="name">Estadística para C.D.</div></div>
+        <div class="node"><div class="lvl">Nivel 1</div><div class="e">🧪</div><div class="name">Proyecto I</div></div>
+        <div class="node"><div class="lvl">Nivel 2</div><div class="e">🤖</div><div class="name">Aprendizaje automático</div></div>
+        <div class="node"><div class="lvl">Nivel 2</div><div class="e">🧠</div><div class="name">Aprendizaje profundo</div></div>
+        <div class="node"><div class="lvl">Nivel 2</div><div class="e">☁️</div><div class="name">ML en la nube + Proyecto II</div></div>
+      </div>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Enfatiza que sin este curso, los siguientes (ML, deep learning) van a ser mucho más difíciles — por eso vale la pena invertir tiempo en fundamentos ahora, aunque a veces parezca "básico".</p>
+      <p class="line">«Todo lo que limpiemos y organicemos en Pandas aquí, se los van a pedir de vuelta en los cursos de modelos.»</p>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide">
+    <div class="slide-badge">⏱️</div>
+    <div class="slide-inner">
+      <div class="kicker">Logística</div>
+      <h1>Nuestras sesiones: 4 horas, nunca 4 horas seguidas de lo mismo</h1>
+      <div class="daymap">
+        <div class="row"><div class="dot"></div><div class="label">Presentación / motivación / vista general</div><div class="mins">25–30 min</div></div>
+        <div class="row"><div class="dot"></div><div class="label">Bloque técnico corto + práctica guiada</div><div class="mins">~40–50 min</div></div>
+        <div class="row rest"><div class="dot"></div><div class="label">Descanso real</div><div class="mins">~25 min</div></div>
+        <div class="row"><div class="dot"></div><div class="label">Actividad interactiva (ej. Kahoot) + "a la acción"</div><div class="mins">variable</div></div>
+        <div class="row"><div class="dot"></div><div class="label">Cierre + evaluables de la semana</div><div class="mins">~10 min</div></div>
+      </div>
+      <p class="body" style="margin-top:1rem;">Antes de cada clase: <strong>material corto pregrabado</strong> (video / lectura) para llegar con la base puesta.</p>
+    </div>
+    <div class="notes" data-time="3 min">
+      <p>Este es el momento de mostrar el "esqueleto" de hoy como ejemplo concreto — si quieres, ten a la mano el cronograma del día para proyectarlo.</p>
+      <p>Explica la lógica de aula invertida: ver el material antes de clase para que el tiempo presencial sea más práctico.</p>
+      <p>Aclara el ritmo: descansos reales, bloques cortos, nunca más de 45–50 min seguidos de teoría.</p>
+    </div>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide">
+    <div class="slide-badge">🤝</div>
+    <div class="slide-inner">
+      <div class="kicker">Cómo vamos a trabajar juntos</div>
+      <h1>Nuestras reglas de juego</h1>
+      <ul class="points">
+        <li>No hay preguntas "tontas" — si tú tienes esa duda, seguro alguien más también.</li>
+        <li>Vamos al ritmo del que más lo necesita, no del que más rápido va.</li>
+        <li>Voy a tratar de ser <strong>lo suficientemente técnico</strong> para quienes ya manejan el lenguaje del mundo de los datos, y <strong>lo suficientemente claro</strong> para que quienes apenas empiezan se vayan familiarizando con ese lenguaje.</li>
+        <li>Un error en el código es normal y esperado: <strong>error no cometido, error no aprendido.</strong></li>
+        <li>Trabajo en pareja o grupo siempre que se pueda — el que ya sabe algo, ayuda al que está aprendiendo.</li>
+        <li>El computador es para trabajar, no para desconectarse — con la confianza de que el ritmo está pensado para que nadie se quede atrás.</li>
+      </ul>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p><strong>Este slide construye la seguridad psicológica del salón</strong> — es clave para quienes llegaron con "fobia" a programar.</p>
+      <p>Invita a que se ayuden entre sí desde el día 1; si el grupo lo permite, arma parejas ahora mismo para el resto de la sesión.</p>
+      <p>Sé explícito con el compromiso de nivel técnico: nombra que sabes que hay perfiles distintos en la sala y que vas a dosificar la profundidad técnica conscientemente, no por accidente.</p>
+    </div>
+  </section>
+
+  <!-- 14 -->
+  <section class="slide">
+    <div class="slide-badge">🎒</div>
+    <div class="slide-inner">
+      <div class="kicker">Antes de seguir hoy</div>
+      <h1>¿Qué necesitas para este curso?</h1>
+      <ul class="points check">
+        <li>Laptop con el ambiente configurado (video previo enviado).</li>
+        <li>Ganas de practicar — la ciencia de datos se aprende <strong>haciendo</strong>, no viendo.</li>
+        <li><strong>Ninguna</strong> experiencia previa en programación.</li>
+        <li>Evaluación del curso: talleres cortos en clase + proyecto de aula final (storytelling con datos reales).</li>
+      </ul>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p>Recordatorio rápido y práctico — transición hacia la parte técnica del día.</p>
+      <p>Menciona el video precargado de ambientes/Jupyter que ya deberían haber visto. Si alguien no lo vio, dale 2 minutos de margen aquí antes de seguir.</p>
+    </div>
+  </section>
+
+  <!-- 15 -->
+  <section class="slide">
+    <div class="slide-badge">💻</div>
+    <div class="slide-inner">
+      <div class="kicker">Un momento técnico, antes de seguir</div>
+      <h1>La terminal: ese cuadro negro que parece de otro mundo</h1>
+      <div class="term" id="termDemo">
+        <div class="term-bar">
+          <span class="term-dot r"></span><span class="term-dot y"></span><span class="term-dot g"></span>
+          <span class="term-title">terminal — zsh</span>
+        </div>
+        <div class="term-body" id="termBody"></div>
+      </div>
+      <button class="term-replay" id="termReplay" type="button">▶ Ejecutar de nuevo</button>
+      <p class="term-caption">Denle "play" las veces que quieran — no se rompe nada.</p>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p>Deja que la animación corra sola, o dale play en vivo con el botón — es un gesto simbólico antes de que ellos abran su propia terminal en el bloque técnico que sigue.</p>
+      <p>Si ves caras nerviosas, señala la pantalla y narra en voz alta lo que está pasando línea por línea, para que deje de ser un objeto misterioso.</p>
+    </div>
+  </section>
+
+  <!-- 16 -->
+  <section class="slide">
+    <div class="slide-badge">😌</div>
+    <div class="slide-inner">
+      <div class="kicker">Mente abierta, cero suposiciones</div>
+      <h1>No le tengan miedo… ¡y siéntanse cracks!</h1>
+      <ul class="points">
+        <li>No hay nada que temerle: es una herramienta más para hablarle directo al computador, no un examen sorpresa.</li>
+        <li>No se llenen de suposiciones antes de siquiera abrirla — la mayoría del miedo se va con el primer comando.</li>
+        <li>Y si al ver el cursor parpadeando sienten que por fin van a parecer "hackers" — <strong>disfrútenlo.</strong> Ese primer comando que corre es una victoria real, y sentirse un crack por lograrlo es parte del proceso, no algo que esconder.</li>
+        <li>Estamos exactamente aquí para esto: aprender lo que todavía no saben. Es literalmente lo que están pagando — <strong>nadie tiene que llegar sabiendo.</strong></li>
+      </ul>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Nombra la reacción típica del miedo paralizante y trátala con calma — pero si alguien se emociona y dice "voy a parecer hacker", celébralo en vez de bajarle el tono: esa emoción es una motivación real, no algo que corregir.</p>
+      <p>Cierra con el mensaje de fondo de todo el curso.</p>
+      <p class="line">«Nadie llega a este salón sabiendo usar una terminal. Si ya supieran, no estarían pagando por este curso — están aquí exactamente para aprenderlo.»</p>
+    </div>
+  </section>
+
+  <!-- 17 -->
+  <section class="slide">
+    <div class="slide-badge">🧩</div>
+    <div class="slide-inner">
+      <div class="kicker">Y ya que estamos…</div>
+      <h1>¿Qué es un lenguaje de programación? ¿Por qué existen varios?</h1>
+      <p class="body">En términos simples: una forma de darle instrucciones a un computador que un humano pueda escribir y que la máquina pueda traducir a algo que ejecuta. Ni más, ni menos.</p>
+      <ul class="points check">
+        <li><strong>Python</strong> → análisis de datos, IA, automatización — el que vamos a usar en este curso.</li>
+        <li><strong>JavaScript</strong> → páginas web interactivas.</li>
+        <li><strong>SQL</strong> → hablarle directamente a bases de datos.</li>
+        <li><strong>C / C++</strong> → control cercano al hardware, máxima velocidad.</li>
+      </ul>
+      <p class="quote">No necesitan memorizar esto — es solo para que "programar" deje de sentirse como una caja negra misteriosa. Es una herramienta más, con su propia historia y lógica, igual que cualquier otro idioma o herramienta de su profesión.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Es un aparte curioso, no examinable — bájale el tono académico y trátalo como una anécdota que quita misterio, no como una clase de teoría de lenguajes.</p>
+      <p>Usa la analogía de idiomas humanos: el español y el inglés existen porque resuelven necesidades de comunicación distintas en contextos distintos — los lenguajes de programación existen porque resuelven problemas técnicos distintos.</p>
+      <p class="line">«Ningún lenguaje es 'el mejor' en abstracto — hay uno más adecuado según lo que quieras lograr. Python es el que vamos a usar aquí porque es el más cómodo para trabajar con datos.»</p>
+    </div>
+  </section>
+
+  <!-- 18 -->
+  <section class="slide">
+    <div class="slide-badge">🚀</div>
+    <div class="slide-inner">
+      <div class="kicker">Empecemos</div>
+      <h1>Manos a la obra</h1>
+      <p class="quote">No necesitas saber programar para empezar. Solo necesitas empezar para aprender a programar.</p>
+      <p class="body">Ahora sí — vamos a preparar el ambiente de trabajo. Abran su computador.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Cierra con energía: después de esto arranca el bloque técnico (Jupyter/ambientes, ~40 min).</p>
+      <p>Puedes pedir un aplauso o un gesto grupal simple para "sellar" el inicio del curso y romper la formalidad antes de pasar a lo técnico.</p>
+    </div>
+  </section>
+
+</div>
+
+<button class="navzone" id="prevZone" aria-label="Anterior">‹</button>
+<button class="navzone" id="nextZone" aria-label="Siguiente">›</button>
+
+<div id="toolbar">
+  <button id="notesToggle" title="Mostrar/ocultar notas del expositor (N)">Notas: off</button>
+  <button id="commentsToggle" title="Mostrar/ocultar tus comentarios (C)">💬 Comentarios</button>
+</div>
+
+<div id="notesPanel">
+  <h4><span class="time" id="notesTime"></span></h4>
+  <div id="notesBody"></div>
+</div>
+
+<div id="commentsPanel">
+  <h4 id="commentsSlideLabel"></h4>
+  <textarea id="commentsText" placeholder="Escribe aquí tus comentarios sobre esta diapositiva: qué cambiar, qué quitar, qué agregar…"></textarea>
+  <div class="comments-actions">
+    <button id="commentsClear" type="button">Borrar este comentario</button>
+    <button id="commentsExport" type="button">⬇ Exportar todos (.md)</button>
+    <span id="commentsCount" class="hint"></span>
+  </div>
+</div>
+
+<div id="footer">
+  <span class="course">Introducción a la Ciencia de Datos · Sesión 1 · Motivación</span>
+  <span id="counter" class="hint">1 / 18</span>
+  <span class="hint">→ / espacio: siguiente / revela viñeta · ←: anterior · N: notas · C: comentarios · F: pantalla completa</span>
+</div>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let current = 0;
+  let fragIndex = 0;
+
+  document.querySelectorAll('.slide .points li').forEach(li => li.classList.add('frag'));
+
+  const progress = document.getElementById('progress');
+  const counter = document.getElementById('counter');
+  const notesToggle = document.getElementById('notesToggle');
+  const notesPanel = document.getElementById('notesPanel');
+  const notesBody = document.getElementById('notesBody');
+  const notesTime = document.getElementById('notesTime');
+
+  const commentsToggle = document.getElementById('commentsToggle');
+  const commentsPanel = document.getElementById('commentsPanel');
+  const commentsText = document.getElementById('commentsText');
+  const commentsSlideLabel = document.getElementById('commentsSlideLabel');
+  const commentsCount = document.getElementById('commentsCount');
+  const commentsClear = document.getElementById('commentsClear');
+  const commentsExport = document.getElementById('commentsExport');
+
+  const COMMENTS_KEY = 'motivacion_comments_v1';
+  function loadComments(){
+    try { return JSON.parse(localStorage.getItem(COMMENTS_KEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function saveComments(){
+    try { localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments)); }
+    catch(e){ /* localStorage no disponible, se pierde al recargar */ }
+  }
+  let comments = loadComments();
+
+  function slideTitle(idx){
+    const h1 = slides[idx].querySelector('h1');
+    return h1 ? h1.textContent.trim() : ('Diapositiva ' + (idx + 1));
+  }
+
+  function updateCommentsCount(){
+    const n = Object.keys(comments).filter(k => comments[k] && comments[k].trim()).length;
+    commentsCount.textContent = n ? (n + ' diapositiva' + (n === 1 ? '' : 's') + ' con comentarios') : 'Sin comentarios guardados todavía';
+  }
+
+  function renderComments(){
+    commentsSlideLabel.textContent = 'Comentarios — diapositiva ' + (current + 1) + ' / ' + total + ': ' + slideTitle(current);
+    commentsText.value = comments[current] || '';
+    updateCommentsCount();
+  }
+
+  function renderNotes(){
+    const n = slides[current].querySelector('.notes');
+    notesBody.innerHTML = n ? n.innerHTML : '<p>(Sin notas para esta diapositiva)</p>';
+    notesTime.textContent = n && n.dataset.time ? ('Tiempo sugerido: ' + n.dataset.time) : '';
+  }
+
+  function currentFrags(){
+    return Array.from(slides[current].querySelectorAll('.frag'));
+  }
+
+  function setupFragments(dir){
+    const frags = currentFrags();
+    if (dir === 'backward') {
+      frags.forEach(f => f.classList.add('shown'));
+      fragIndex = frags.length;
+    } else {
+      frags.forEach(f => f.classList.remove('shown'));
+      fragIndex = 0;
+    }
+  }
+
+  function goTo(i){
+    const target = Math.max(0, Math.min(total - 1, i));
+    const dir = target < current ? 'backward' : 'forward';
+    current = target;
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === current));
+    progress.style.width = (((current + 1) / total) * 100) + '%';
+    counter.textContent = (current + 1) + ' / ' + total;
+    setupFragments(dir);
+    if (notesPanel.classList.contains('open')) renderNotes();
+    if (commentsPanel.classList.contains('open')) renderComments();
+    location.hash = 'slide-' + (current + 1);
+    if (slides[current].querySelector('#termBody')) typeTerminal();
+  }
+
+  const termScript = [
+    { cmd: 'whoami', out: 'alguien que está aprendiendo a hablar con datos 🙂' },
+    { cmd: 'echo "la terminal no muerde"', out: 'la terminal no muerde' }
+  ];
+  let termRun = 0;
+
+  function typeTerminal(){
+    const body = document.getElementById('termBody');
+    if (!body) return;
+    const myRun = ++termRun;
+    body.innerHTML = '';
+    let i = 0;
+    function typeLine(step, cb){
+      if (myRun !== termRun) return;
+      const row = document.createElement('div');
+      row.className = 'term-row';
+      const prompt = document.createElement('span');
+      prompt.className = 'prompt'; prompt.textContent = '$';
+      const typed = document.createElement('span');
+      typed.className = 'typed';
+      const cursor = document.createElement('span');
+      cursor.className = 'term-cursor';
+      row.appendChild(prompt); row.appendChild(typed); row.appendChild(cursor);
+      body.appendChild(row);
+      let ci = 0;
+      const iv = setInterval(() => {
+        if (myRun !== termRun) { clearInterval(iv); return; }
+        typed.textContent += step.cmd[ci];
+        ci++;
+        if (ci >= step.cmd.length) {
+          clearInterval(iv);
+          cursor.remove();
+          setTimeout(() => {
+            if (myRun !== termRun) return;
+            const out = document.createElement('div');
+            out.className = 'term-out';
+            out.textContent = step.out;
+            body.appendChild(out);
+            cb();
+          }, 350);
+        }
+      }, 55);
+    }
+    function step(){
+      if (myRun !== termRun || i >= termScript.length) return;
+      typeLine(termScript[i], () => { i++; setTimeout(step, 500); });
+    }
+    step();
+  }
+
+  function next(){
+    const frags = currentFrags();
+    if (fragIndex < frags.length) {
+      frags[fragIndex].classList.add('shown');
+      fragIndex++;
+      return;
+    }
+    goTo(current + 1);
+  }
+  function prev(){
+    if (fragIndex > 0) {
+      const frags = currentFrags();
+      fragIndex--;
+      frags[fragIndex].classList.remove('shown');
+      return;
+    }
+    goTo(current - 1);
+  }
+
+  function toggleNotes(){
+    const opening = !notesPanel.classList.contains('open');
+    notesPanel.classList.toggle('open', opening);
+    notesToggle.classList.toggle('active', opening);
+    notesToggle.textContent = 'Notas: ' + (opening ? 'on' : 'off');
+    if (opening) {
+      commentsPanel.classList.remove('open');
+      commentsToggle.classList.remove('active');
+      commentsToggle.textContent = '💬 Comentarios';
+      renderNotes();
+    }
+  }
+
+  function toggleComments(){
+    const opening = !commentsPanel.classList.contains('open');
+    commentsPanel.classList.toggle('open', opening);
+    commentsToggle.classList.toggle('active', opening);
+    commentsToggle.textContent = opening ? '💬 Comentarios: on' : '💬 Comentarios';
+    if (opening) {
+      notesPanel.classList.remove('open');
+      notesToggle.classList.remove('active');
+      notesToggle.textContent = 'Notas: off';
+      renderComments();
+    }
+  }
+
+  function exportComments(){
+    const entries = Object.keys(comments)
+      .map(k => parseInt(k, 10))
+      .filter(idx => comments[idx] && comments[idx].trim())
+      .sort((a, b) => a - b);
+    if (!entries.length) {
+      alert('Todavía no hay comentarios guardados en ninguna diapositiva.');
+      return;
+    }
+    let md = '# Comentarios — Sesión 1: Motivación\n\n';
+    entries.forEach(idx => {
+      md += '## Diapositiva ' + (idx + 1) + ': ' + slideTitle(idx) + '\n\n' + comments[idx].trim() + '\n\n';
+    });
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'comentarios-sesion-01-motivacion.md';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(md).catch(() => {});
+    }
+  }
+
+  function toggleFullscreen(){
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(()=>{});
+    } else {
+      document.exitFullscreen().catch(()=>{});
+    }
+  }
+
+  document.getElementById('prevZone').addEventListener('click', prev);
+  document.getElementById('nextZone').addEventListener('click', next);
+  notesToggle.addEventListener('click', toggleNotes);
+  commentsToggle.addEventListener('click', toggleComments);
+  commentsExport.addEventListener('click', exportComments);
+  commentsClear.addEventListener('click', () => {
+    delete comments[current];
+    saveComments();
+    renderComments();
+  });
+  commentsText.addEventListener('input', () => {
+    comments[current] = commentsText.value;
+    saveComments();
+    updateCommentsCount();
+  });
+  const termReplayBtn = document.getElementById('termReplay');
+  if (termReplayBtn) termReplayBtn.addEventListener('click', typeTerminal);
+
+  document.addEventListener('keydown', (e) => {
+    const tag = e.target && e.target.tagName;
+    if (tag === 'TEXTAREA' || tag === 'INPUT') {
+      if (e.key === 'Escape') { e.target.blur(); }
+      return;
+    }
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if (e.key.toLowerCase() === 'n') { toggleNotes(); }
+    else if (e.key.toLowerCase() === 'c') { toggleComments(); }
+    else if (e.key.toLowerCase() === 'f') { toggleFullscreen(); }
+    else if (e.key === 'Home') { goTo(0); }
+    else if (e.key === 'End') { goTo(total - 1); }
+  });
+
+  const hashMatch = location.hash.match(/slide-(\d+)/);
+  const startAt = hashMatch ? (parseInt(hashMatch[1], 10) - 1) : 0;
+  goTo(isNaN(startAt) ? 0 : startAt);
+})();
+</script>
+
+</body>
+</html>
