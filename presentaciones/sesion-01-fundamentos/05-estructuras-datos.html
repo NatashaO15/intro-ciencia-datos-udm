@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesión 1 · Estructuras de Datos</title>
+<style>
+  :root{
+    --bg: #0f1428;
+    --bg-2: #161c38;
+    --text: #f4f1ea;
+    --text-dim: #b7bedb;
+    --accent: #f2a94b;
+    --accent-2: #5eeacb;
+    --card: rgba(255,255,255,0.06);
+    --card-border: rgba(255,255,255,0.14);
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    overflow: hidden;
+  }
+  #deck{ position: relative; width: 100vw; height: 100vh; }
+  .slide{
+    position: absolute; inset: 0; display: none;
+    flex-direction: column; justify-content: center; align-items: center;
+    padding: 6vh 8vw 9vh 8vw;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(94,234,203,0.10), transparent 60%),
+      radial-gradient(1000px 700px at 100% 110%, rgba(242,169,75,0.10), transparent 55%),
+      var(--bg);
+  }
+  .slide.active{ display:flex; }
+  .slide-inner{ max-width: 1150px; width: 100%; }
+  .slide-badge{
+    position: absolute; top: 6vh; right: 6vw;
+    width: clamp(56px, 7vw, 88px); height: clamp(56px, 7vw, 88px);
+    border-radius: 20px;
+    background: var(--card); border: 1px solid var(--card-border);
+    display:flex; align-items:center; justify-content:center;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    z-index: 2; line-height: 1;
+  }
+  .kicker{
+    display:inline-flex; align-items:center; gap:.5em;
+    text-transform: uppercase; letter-spacing: .12em;
+    font-size: clamp(0.85rem, 1.1vw, 1rem); font-weight: 700;
+    color: var(--accent); margin-bottom: 1.1rem;
+  }
+  .kicker::before{ content:""; width: 1.6em; height: 2px; background: var(--accent); display:inline-block; }
+  h1{
+    font-size: clamp(2rem, 4.2vw, 3.2rem); line-height: 1.14;
+    margin: 0 0 1.1rem 0; font-weight: 800; letter-spacing: -0.01em;
+  }
+  h1 em{ color: var(--accent-2); font-style: normal; }
+  .subtitle{
+    font-size: clamp(1.05rem, 1.7vw, 1.35rem); color: var(--text-dim);
+    margin: -0.4rem 0 2rem 0; max-width: 50ch;
+  }
+  .body{ font-size: clamp(1.02rem, 1.55vw, 1.3rem); line-height: 1.55; color: var(--text); }
+  .body p{ margin: 0 0 1rem 0; }
+  ul.points{ list-style: none; margin: 0; padding: 0; display:flex; flex-direction:column; gap: .8rem; }
+  ul.points li{ font-size: clamp(1.0rem, 1.5vw, 1.25rem); line-height: 1.5; padding-left: 1.6em; position: relative; }
+  ul.points li::before{ content: "→"; position: absolute; left: 0; top: 0; color: var(--accent); font-weight: 700; }
+  ul.points.check li::before{ content: "✓"; color: var(--accent-2); }
+  .frag{ opacity: 0; transform: translateY(10px); transition: opacity .4s ease, transform .4s ease; }
+  .frag.shown{ opacity: 1; transform: translateY(0); }
+
+  .quote{
+    font-size: clamp(1.3rem, 2.4vw, 1.9rem); font-weight: 700; line-height: 1.4;
+    color: var(--text); border-left: 4px solid var(--accent); padding-left: 1.1rem; margin: 1.2rem 0;
+  }
+  .caption{ font-size: clamp(0.95rem, 1.3vw, 1.1rem); color: var(--text-dim); margin-top: 1rem; }
+  .caption strong{ color: var(--text); }
+
+  /* Code block */
+  .code{
+    background:#0b0e1a; border:1px solid var(--card-border); border-radius:12px;
+    padding:1.1rem 1.3rem; font-family: Menlo, Consolas, "SFMono-Regular", monospace;
+    font-size: clamp(0.78rem, 1.15vw, 1rem); color: var(--text); line-height:1.6;
+    overflow-x:auto; text-align:left; margin: 1.2rem 0; white-space:pre;
+  }
+  .code .k{ color: var(--accent-2); }
+  .code .s{ color: var(--accent); }
+  .code .c{ color: var(--text-dim); }
+  .code .o{ color: #f28b82; }
+
+  /* 4-piece overview grid */
+  .piezas{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1.6rem; }
+  .piezas .p{
+    background: var(--card); border:1px solid var(--card-border); border-radius: 14px;
+    padding: 1.2rem 1rem; text-align:center;
+  }
+  .piezas .p .ic{ font-size: 2rem; margin-bottom: .5rem; }
+  .piezas .p .n{ font-weight:700; font-size: clamp(0.95rem, 1.3vw, 1.1rem); }
+
+  /* Difficulty tier cards (matches notebook levels) */
+  .niveles{ display:flex; gap: 1rem; margin-top: 1.6rem; flex-wrap: wrap; }
+  .niveles .nivel{
+    flex: 1 1 220px; background: var(--card); border:1px solid var(--card-border); border-radius: 16px;
+    padding: 1.3rem 1.2rem;
+  }
+  .niveles .nivel .ic{ font-size: 1.8rem; }
+  .niveles .nivel .t{ font-weight:800; font-size: clamp(1.05rem, 1.4vw, 1.2rem); margin: .4rem 0 .3rem 0; }
+  .niveles .nivel .d{ font-size: clamp(0.88rem, 1.15vw, 1rem); color: var(--text-dim); line-height:1.45; }
+
+  /* Chrome: progress bar, toolbar, footer, nav, notes/comments */
+  #progress{
+    position:fixed; top:0; left:0; height:4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    width:0%; z-index: 50; transition: width .25s ease;
+  }
+  #footer{
+    position:fixed; bottom:0; left:0; right:0; height: 6vh; min-height:42px;
+    display:flex; align-items:center; justify-content:space-between; padding: 0 1.6rem;
+    font-size: 0.8rem; color: var(--text-dim);
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.35)); z-index: 40;
+  }
+  #footer .course{ opacity:.85; }
+  #footer .hint{ opacity:.6; }
+  #counter{ font-variant-numeric: tabular-nums; }
+
+  .navzone{
+    position:fixed; top:0; bottom:0; width: 64px; z-index: 45;
+    background: transparent; border:none; cursor: pointer;
+    display:flex; align-items:center; justify-content:center;
+    color: var(--text-dim); opacity:0; transition: opacity .15s ease; font-size: 1.6rem;
+  }
+  .navzone:hover{ opacity: 1; }
+  #prevZone{ left:0; }
+  #nextZone{ right:0; }
+
+  #toolbar{ position: fixed; bottom: 6vh; left: 1.2rem; z-index: 46; display:flex; gap:.6rem; flex-wrap:wrap; }
+  #notesToggle, #commentsToggle{
+    background: var(--card); border:1px solid var(--card-border);
+    color: var(--text); border-radius: 999px; padding: .4rem .9rem;
+    font-size: .8rem; cursor:pointer;
+  }
+  #notesToggle.active{ background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight:700; }
+  #commentsToggle.active{ background: var(--accent-2); color: var(--bg); border-color: var(--accent-2); font-weight:700; }
+
+  #notesPanel, #commentsPanel{
+    position: fixed; left:0; right:0; bottom:0; max-height: 42vh; overflow-y:auto;
+    background: rgba(8,11,24,0.97); padding: 1.4rem 2.2rem 1.6rem 2.2rem;
+    transform: translateY(100%); transition: transform .25s ease; z-index: 44;
+  }
+  #notesPanel{ border-top: 2px solid var(--accent); }
+  #commentsPanel{ border-top: 2px solid var(--accent-2); }
+  #notesPanel.open, #commentsPanel.open{ transform: translateY(0); }
+  #notesPanel h4, #commentsPanel h4{
+    margin: 0 0 .6rem 0; color: var(--accent); font-size: .95rem;
+    text-transform:uppercase; letter-spacing:.08em;
+  }
+  #commentsPanel h4{ color: var(--accent-2); }
+  #notesPanel .time{ color: var(--accent-2); font-weight:700; }
+  #notesPanel ul{ margin:.3rem 0 .8rem 1.1rem; padding:0; }
+  #notesPanel li{ margin-bottom:.35rem; line-height:1.45; font-size:.95rem; }
+  #notesPanel p{ line-height:1.5; font-size:.95rem; margin: 0 0 .6rem 0;}
+  #notesPanel .line{ color: var(--text-dim); font-style: italic; }
+
+  #commentsText{
+    width:100%; min-height: 110px; resize: vertical; background: var(--bg-2); color: var(--text);
+    border: 1px solid var(--card-border); border-radius: 10px; padding: .8rem .9rem;
+    font-size: .95rem; font-family: inherit; line-height: 1.5;
+  }
+  #commentsText:focus{ outline: none; border-color: var(--accent-2); }
+  .comments-actions{ display:flex; align-items:center; gap:.7rem; margin-top:.7rem; flex-wrap:wrap; }
+  .comments-actions button{
+    background: var(--card); border:1px solid var(--card-border); color: var(--text);
+    border-radius: 999px; padding: .4rem .9rem; font-size: .8rem; cursor:pointer;
+  }
+  .comments-actions button:hover{ border-color: var(--accent-2); }
+  .comments-actions .hint{ font-size: .8rem; color: var(--text-dim); }
+
+  .notes{ display:none; }
+
+  @media (max-width: 820px){
+    .slide-badge{ display:none; }
+    .piezas{ grid-template-columns: repeat(2, 1fr); }
+    .niveles{ flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div id="deck">
+
+  <!-- 1 -->
+  <section class="slide">
+    <div class="slide-badge">🧱</div>
+    <div class="slide-inner">
+      <div class="kicker">Sesión 1 · Las piezas de todo programa</div>
+      <h1>Estructuras de Datos en <em>Python</em></h1>
+      <p class="subtitle">Variables, strings, listas y diccionarios — con el mismo ejemplo que vas a usar hoy en tu notebook de práctica: las notas de un grupo de estudiantes.</p>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p>Aterriza la expectativa: esto no es teoría abstracta, es exactamente el vocabulario que van a necesitar en el notebook de ejercicios que sigue después de esta charla.</p>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide">
+    <div class="slide-badge">🧩</div>
+    <div class="slide-inner">
+      <div class="kicker">El mapa de hoy</div>
+      <h1>Cuatro piezas, un solo ejemplo</h1>
+      <p class="body">Con estas cuatro piezas se construye <strong>todo</strong> lo demás en Python — incluyendo, la próxima sesión, cómo funciona Pandas por dentro.</p>
+      <div class="piezas">
+        <div class="p"><div class="ic">🔤</div><div class="n">Variables</div></div>
+        <div class="p"><div class="ic">📝</div><div class="n">Strings</div></div>
+        <div class="p"><div class="ic">📋</div><div class="n">Listas</div></div>
+        <div class="p"><div class="ic">🗂️</div><div class="n">Diccionarios</div></div>
+      </div>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p>Solo nombra las cuatro piezas, sin profundizar todavía — es el índice mental de toda la sesión.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide">
+    <div class="slide-badge">🔤</div>
+    <div class="slide-inner">
+      <div class="kicker">Pieza 1 · Variables primitivas</div>
+      <h1>Un nombre para guardar un dato</h1>
+      <p class="body">En Python no hay que avisar de qué tipo es una variable — Python lo descubre solo. Los tipos básicos:</p>
+      <ul class="points check">
+        <li><code>int</code> — números enteros (<code>5</code>, <code>-3</code>)</li>
+        <li><code>float</code> — números con decimales (<code>4.5</code>)</li>
+        <li><code>str</code> — texto, entre comillas (<code>"Ana"</code>)</li>
+        <li><code>bool</code> — verdadero o falso (<code>True</code> / <code>False</code>)</li>
+      </ul>
+      <pre class="code"><span class="k">nombre_estudiante</span> = <span class="s">"Ana"</span>
+<span class="k">nota</span> = <span class="o">4.5</span>
+<span class="k">aprobado</span> = <span class="o">True</span>
+
+<span class="c">print(type(nombre_estudiante))</span>  <span class="c"># &lt;class 'str'&gt;</span></pre>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p><code>type(...)</code> es la herramienta que van a usar constantemente para "preguntarle" a Python qué tiene guardado.</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide">
+    <div class="slide-badge">🔁</div>
+    <div class="slide-inner">
+      <div class="kicker">Un problema muy común con datos reales</div>
+      <h1>Casting: convertir entre tipos</h1>
+      <p class="body">Los datos reales casi nunca llegan en el tipo que necesitas — un número puede llegar como texto. Para convertir, usamos <code>int(...)</code>, <code>float(...)</code>, <code>str(...)</code>.</p>
+      <pre class="code"><span class="k">nota_texto</span> = <span class="s">"4.5"</span>          <span class="c"># llegó como string</span>
+<span class="k">nota_numero</span> = <span class="k">float</span>(nota_texto)  <span class="c"># ahora sí se puede sumar/comparar</span></pre>
+      <p class="quote">Este es, casi siempre, el primer error que vas a depurar cuando trabajes con datos reales: algo que "se ve" como número pero Python lo trata como texto.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Esto conecta directo con lo que van a ver en los notebooks de nivel medio/difícil: valores faltantes y columnas "sucias" que llegan como texto.</p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide">
+    <div class="slide-badge">📝</div>
+    <div class="slide-inner">
+      <div class="kicker">Pieza 2 · Strings</div>
+      <h1>Indexar y recortar texto</h1>
+      <p class="body">Un string se puede "recorrer" por posición (<strong>indexación</strong>) y "recortar" (<strong>slicing</strong>) — igual que una lista.</p>
+      <pre class="code"><span class="k">nombre</span> = <span class="s">"Ana Gomez"</span>
+
+<span class="k">nombre</span>[<span class="o">0</span>]      <span class="c"># 'A'      → primera letra</span>
+<span class="k">nombre</span>[<span class="o">0</span>:<span class="o">3</span>]    <span class="c"># 'Ana'    → primeras 3 letras</span>
+<span class="k">nombre</span>[-<span class="o">1</span>]     <span class="c"># 'z'      → última letra</span></pre>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>El slicing <code>[inicio:fin]</code> reaparece idéntico en listas — vale la pena remarcar el paralelismo.</p>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide">
+    <div class="slide-badge">🧹</div>
+    <div class="slide-inner">
+      <div class="kicker">Pieza 2 · Strings</div>
+      <h1>Métodos para limpiar texto</h1>
+      <ul class="points check">
+        <li><code>.strip()</code> — quita espacios sobrantes al inicio/final.</li>
+        <li><code>.upper()</code> / <code>.lower()</code> — cambian mayúsculas/minúsculas.</li>
+        <li><code>.title()</code> — Primera Letra De Cada Palabra En Mayúscula.</li>
+        <li><code>.replace(a, b)</code> — reemplaza texto.</li>
+      </ul>
+      <pre class="code"><span class="k">sucio</span> = <span class="s">"  ana gomez  "</span>
+<span class="k">limpio</span> = sucio.strip().title()
+<span class="c"># limpio → "Ana Gomez"</span></pre>
+      <p class="quote">Estos son, literalmente, los mismos métodos que vas a usar la próxima sesión con <code>.str</code> en Pandas — sobre una columna entera en vez de un solo texto.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Esta es la conexión más importante de la diapositiva con la siguiente sesión — que quede clara la idea de "lo mismo, pero aplicado a una tabla completa".</p>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide">
+    <div class="slide-badge">📋</div>
+    <div class="slide-inner">
+      <div class="kicker">Pieza 3 · Listas</div>
+      <h1>Varios valores, en orden</h1>
+      <p class="body">Una <strong>lista</strong> guarda varios valores en orden, entre corchetes <code>[ ]</code>.</p>
+      <pre class="code"><span class="k">notas</span> = [<span class="o">3.5</span>, <span class="o">4.0</span>, <span class="o">2.8</span>, <span class="o">5.0</span>, <span class="o">4.2</span>]
+
+<span class="k">len</span>(notas)              <span class="c"># 5      → cuántos elementos</span>
+<span class="k">sum</span>(notas)              <span class="c"># 19.5   → suma</span>
+<span class="k">sum</span>(notas) / <span class="k">len</span>(notas) <span class="c"># 3.9   → promedio</span>
+<span class="k">max</span>(notas), <span class="k">min</span>(notas)    <span class="c"># 5.0, 2.8</span></pre>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Este es exactamente el bloque que abre el Ejercicio 3 de los tres notebooks — <code>len</code>, <code>sum</code>, <code>max</code>, <code>min</code> son las cuatro funciones que más van a repetir hoy.</p>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide">
+    <div class="slide-badge">🔎</div>
+    <div class="slide-inner">
+      <div class="kicker">Pieza 3 · Listas</div>
+      <h1>Recorrer y filtrar con <em>for</em></h1>
+      <p class="body">Para revisar cada elemento uno por uno, usamos un <code>for</code>. Combinado con un <code>if</code>, podemos <strong>filtrar</strong> o <strong>contar</strong>.</p>
+      <pre class="code"><span class="k">notas</span> = [<span class="o">3.5</span>, <span class="o">4.0</span>, <span class="o">2.8</span>, <span class="o">5.0</span>, <span class="o">4.2</span>]
+<span class="k">aprobados</span> = <span class="o">0</span>
+
+<span class="c">for</span> nota <span class="c">in</span> notas:
+    <span class="c">if</span> nota >= <span class="o">3.0</span>:
+        aprobados += <span class="o">1</span>
+
+<span class="c">print</span>(aprobados)  <span class="c"># 4</span></pre>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>El nivel medio de los notebooks (recorrer, filtrar y contar) es exactamente este patrón, un poco más largo.</p>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide">
+    <div class="slide-badge">🗂️</div>
+    <div class="slide-inner">
+      <div class="kicker">Pieza 4 · Diccionarios</div>
+      <h1>Acceder por nombre, no por posición</h1>
+      <p class="body">Un <strong>diccionario</strong> guarda datos con una "etiqueta" (llave) para cada valor, entre llaves <code>{ }</code>.</p>
+      <pre class="code"><span class="k">estudiante</span> = {
+    <span class="s">"nombre"</span>: <span class="s">"Ana"</span>,
+    <span class="s">"nota"</span>: <span class="o">4.5</span>,
+}
+
+<span class="k">estudiante</span>[<span class="s">"nombre"</span>]  <span class="c"># "Ana"</span>
+
+<span class="c"># f-string: arma un mensaje con variables adentro</span>
+<span class="k">mensaje</span> = <span class="s">f"{estudiante['nombre']} tiene una nota de {estudiante['nota']}"</span></pre>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>El f-string suele generar dudas la primera vez — vale la pena escribirlo en vivo y mostrar qué pasa si se te olvida la <code>f</code> al inicio.</p>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide">
+    <div class="slide-badge">🎯</div>
+    <div class="slide-inner">
+      <div class="kicker">Uniendo todo</div>
+      <h1>Una lista... de diccionarios</h1>
+      <p class="body">Así es como casi siempre se ven los datos reales antes de que existan herramientas como Pandas: una <strong>lista de registros</strong>, cada uno un diccionario.</p>
+      <pre class="code"><span class="k">grupo</span> = [
+    {<span class="s">"nombre"</span>: <span class="s">"Ana"</span>,   <span class="s">"nota"</span>: <span class="o">4.5</span>},
+    {<span class="s">"nombre"</span>: <span class="s">"Luis"</span>,  <span class="s">"nota"</span>: <span class="o">2.7</span>},
+    {<span class="s">"nombre"</span>: <span class="s">"Marta"</span>, <span class="s">"nota"</span>: <span class="o">3.0</span>},
+]
+
+<span class="c">for</span> estudiante <span class="c">in</span> grupo:
+    estado = <span class="s">"Aprobado"</span> <span class="c">if</span> estudiante[<span class="s">"nota"</span>] >= <span class="o">3.0</span> <span class="c">else</span> <span class="s">"No aprobado"</span>
+    <span class="c">print</span>(<span class="s">f"{estudiante['nombre']}: {estado}"</span>)</pre>
+      <p class="quote">Cada fila de un DataFrame de Pandas es, por dentro, básicamente esto: un diccionario dentro de una lista.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Esta es la diapositiva puente hacia la próxima sesión — no hace falta profundizar en Pandas hoy, solo plantar la idea.</p>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide">
+    <div class="slide-badge">🌱</div>
+    <div class="slide-inner">
+      <div class="kicker">Ahora a practicar</div>
+      <h1>Elige tu nivel — sin examen de por medio</h1>
+      <p class="body">Los mismos cuatro bloques de hoy (variables, strings, listas, diccionarios), en tres niveles de dificultad. No hay ninguna evaluación que dependa de cuál elijas.</p>
+      <div class="niveles">
+        <div class="nivel"><div class="ic">🌱</div><div class="t">Fácil</div><div class="d">Si nunca has programado, o programar todavía te pone nervioso/a. Puedes repetirlo las veces que quieras.</div></div>
+        <div class="nivel"><div class="ic">🌿</div><div class="t">Medio</div><div class="d">Casting, limpieza de strings, filtrar y contar en listas, un mini "group by" a mano.</div></div>
+        <div class="nivel"><div class="ic">🌳</div><div class="t">Difícil</div><div class="d">Valores faltantes, texto compuesto, listas de diccionarios anidados, un reporte agregado.</div></div>
+      </div>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p>Enfatiza que elegir "fácil" no es "quedarse corto" — es literalmente el punto de partida recomendado para quien lo necesite, y se puede subir de nivel después.</p>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide">
+    <div class="slide-badge">🚀</div>
+    <div class="slide-inner">
+      <div class="kicker">Manos a la obra</div>
+      <h1>A tus notebooks</h1>
+      <p class="quote">Si todo corre sin errores, ya tienes las bases para la próxima sesión: cómo Pandas hace automáticamente muchas de estas cosas — promedios, filtros, limpieza de texto — sobre tablas completas de datos.</p>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p>Transición directa a abrir el notebook de práctica correspondiente (fácil/medio/difícil, según lo que cada quien haya elegido).</p>
+    </div>
+  </section>
+
+</div>
+
+<button class="navzone" id="prevZone" aria-label="Anterior">‹</button>
+<button class="navzone" id="nextZone" aria-label="Siguiente">›</button>
+
+<div id="toolbar">
+  <button id="notesToggle" title="Mostrar/ocultar notas del expositor (N)">Notas: off</button>
+  <button id="commentsToggle" title="Mostrar/ocultar tus comentarios (C)">💬 Comentarios</button>
+</div>
+
+<div id="notesPanel">
+  <h4><span class="time" id="notesTime"></span></h4>
+  <div id="notesBody"></div>
+</div>
+
+<div id="commentsPanel">
+  <h4 id="commentsSlideLabel"></h4>
+  <textarea id="commentsText" placeholder="Escribe aquí tus comentarios sobre esta diapositiva: qué cambiar, qué quitar, qué agregar…"></textarea>
+  <div class="comments-actions">
+    <button id="commentsClear" type="button">Borrar este comentario</button>
+    <button id="commentsExport" type="button">⬇ Exportar todos (.md)</button>
+    <span id="commentsCount" class="hint"></span>
+  </div>
+</div>
+
+<div id="footer">
+  <span class="course">Introducción a la Ciencia de Datos · Sesión 1 · Estructuras de Datos</span>
+  <span id="counter" class="hint">1 / 12</span>
+  <span class="hint">→ / espacio: siguiente / revela viñeta · ←: anterior · N: notas · C: comentarios · F: pantalla completa</span>
+</div>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let current = 0;
+  let fragIndex = 0;
+
+  document.querySelectorAll('.slide .points li').forEach(li => li.classList.add('frag'));
+
+  const progress = document.getElementById('progress');
+  const counter = document.getElementById('counter');
+  const notesToggle = document.getElementById('notesToggle');
+  const notesPanel = document.getElementById('notesPanel');
+  const notesBody = document.getElementById('notesBody');
+  const notesTime = document.getElementById('notesTime');
+
+  const commentsToggle = document.getElementById('commentsToggle');
+  const commentsPanel = document.getElementById('commentsPanel');
+  const commentsText = document.getElementById('commentsText');
+  const commentsSlideLabel = document.getElementById('commentsSlideLabel');
+  const commentsCount = document.getElementById('commentsCount');
+  const commentsClear = document.getElementById('commentsClear');
+  const commentsExport = document.getElementById('commentsExport');
+
+  const COMMENTS_KEY = 'estructuras_datos_comments_v1';
+  function loadComments(){
+    try { return JSON.parse(localStorage.getItem(COMMENTS_KEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function saveComments(){
+    try { localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments)); }
+    catch(e){ /* localStorage no disponible, se pierde al recargar */ }
+  }
+  let comments = loadComments();
+
+  function slideTitle(idx){
+    const h1 = slides[idx].querySelector('h1');
+    return h1 ? h1.textContent.trim() : ('Diapositiva ' + (idx + 1));
+  }
+
+  function updateCommentsCount(){
+    const n = Object.keys(comments).filter(k => comments[k] && comments[k].trim()).length;
+    commentsCount.textContent = n ? (n + ' diapositiva' + (n === 1 ? '' : 's') + ' con comentarios') : 'Sin comentarios guardados todavía';
+  }
+
+  function renderComments(){
+    commentsSlideLabel.textContent = 'Comentarios — diapositiva ' + (current + 1) + ' / ' + total + ': ' + slideTitle(current);
+    commentsText.value = comments[current] || '';
+    updateCommentsCount();
+  }
+
+  function renderNotes(){
+    const n = slides[current].querySelector('.notes');
+    notesBody.innerHTML = n ? n.innerHTML : '<p>(Sin notas para esta diapositiva)</p>';
+    notesTime.textContent = n && n.dataset.time ? ('Tiempo sugerido: ' + n.dataset.time) : '';
+  }
+
+  function currentFrags(){
+    return Array.from(slides[current].querySelectorAll('.frag'));
+  }
+
+  function setupFragments(dir){
+    const frags = currentFrags();
+    if (dir === 'backward') {
+      frags.forEach(f => f.classList.add('shown'));
+      fragIndex = frags.length;
+    } else {
+      frags.forEach(f => f.classList.remove('shown'));
+      fragIndex = 0;
+    }
+  }
+
+  function goTo(i){
+    const target = Math.max(0, Math.min(total - 1, i));
+    const dir = target < current ? 'backward' : 'forward';
+    current = target;
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === current));
+    progress.style.width = (((current + 1) / total) * 100) + '%';
+    counter.textContent = (current + 1) + ' / ' + total;
+    setupFragments(dir);
+    if (notesPanel.classList.contains('open')) renderNotes();
+    if (commentsPanel.classList.contains('open')) renderComments();
+    location.hash = 'slide-' + (current + 1);
+  }
+
+  function next(){
+    const frags = currentFrags();
+    if (fragIndex < frags.length) {
+      frags[fragIndex].classList.add('shown');
+      fragIndex++;
+      return;
+    }
+    goTo(current + 1);
+  }
+  function prev(){
+    if (fragIndex > 0) {
+      const frags = currentFrags();
+      fragIndex--;
+      frags[fragIndex].classList.remove('shown');
+      return;
+    }
+    goTo(current - 1);
+  }
+
+  function toggleNotes(){
+    const opening = !notesPanel.classList.contains('open');
+    notesPanel.classList.toggle('open', opening);
+    notesToggle.classList.toggle('active', opening);
+    notesToggle.textContent = 'Notas: ' + (opening ? 'on' : 'off');
+    if (opening) {
+      commentsPanel.classList.remove('open');
+      commentsToggle.classList.remove('active');
+      commentsToggle.textContent = '💬 Comentarios';
+      renderNotes();
+    }
+  }
+
+  function toggleComments(){
+    const opening = !commentsPanel.classList.contains('open');
+    commentsPanel.classList.toggle('open', opening);
+    commentsToggle.classList.toggle('active', opening);
+    commentsToggle.textContent = opening ? '💬 Comentarios: on' : '💬 Comentarios';
+    if (opening) {
+      notesPanel.classList.remove('open');
+      notesToggle.classList.remove('active');
+      notesToggle.textContent = 'Notas: off';
+      renderComments();
+    }
+  }
+
+  function exportComments(){
+    const entries = Object.keys(comments)
+      .map(k => parseInt(k, 10))
+      .filter(idx => comments[idx] && comments[idx].trim())
+      .sort((a, b) => a - b);
+    if (!entries.length) {
+      alert('Todavía no hay comentarios guardados en ninguna diapositiva.');
+      return;
+    }
+    let md = '# Comentarios — Sesión 1: Estructuras de Datos\n\n';
+    entries.forEach(idx => {
+      md += '## Diapositiva ' + (idx + 1) + ': ' + slideTitle(idx) + '\n\n' + comments[idx].trim() + '\n\n';
+    });
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'comentarios-sesion-01-estructuras-datos.md';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(md).catch(() => {});
+    }
+  }
+
+  function toggleFullscreen(){
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(()=>{});
+    } else {
+      document.exitFullscreen().catch(()=>{});
+    }
+  }
+
+  document.getElementById('prevZone').addEventListener('click', prev);
+  document.getElementById('nextZone').addEventListener('click', next);
+  notesToggle.addEventListener('click', toggleNotes);
+  commentsToggle.addEventListener('click', toggleComments);
+  commentsExport.addEventListener('click', exportComments);
+  commentsClear.addEventListener('click', () => {
+    delete comments[current];
+    saveComments();
+    renderComments();
+  });
+  commentsText.addEventListener('input', () => {
+    comments[current] = commentsText.value;
+    saveComments();
+    updateCommentsCount();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const tag = e.target && e.target.tagName;
+    if (tag === 'TEXTAREA' || tag === 'INPUT') {
+      if (e.key === 'Escape') { e.target.blur(); }
+      return;
+    }
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if (e.key.toLowerCase() === 'n') { toggleNotes(); }
+    else if (e.key.toLowerCase() === 'c') { toggleComments(); }
+    else if (e.key.toLowerCase() === 'f') { toggleFullscreen(); }
+    else if (e.key === 'Home') { goTo(0); }
+    else if (e.key === 'End') { goTo(total - 1); }
+  });
+
+  const hashMatch = location.hash.match(/slide-(\d+)/);
+  const startAt = hashMatch ? (parseInt(hashMatch[1], 10) - 1) : 0;
+  goTo(isNaN(startAt) ? 0 : startAt);
+})();
+</script>
+
+</body>
+</html>
