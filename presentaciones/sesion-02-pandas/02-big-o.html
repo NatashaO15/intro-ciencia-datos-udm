@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesión 2 · Rendimiento y Big O</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bg: '#0F172A',
+          card: '#1B2336',
+          muted: '#272F42',
+          mutedfg: '#94A3B8',
+          fg: '#F8FAFC',
+          edge: '#475569',
+          accent: '#22C55E',
+          amber: '#F59E0B',
+          danger: '#EF4444',
+        },
+        fontFamily: {
+          sans: ['"IBM Plex Sans"', 'sans-serif'],
+          mono: ['"IBM Plex Mono"', 'monospace'],
+        },
+      }
+    }
+  }
+</script>
+<style type="text/tailwindcss">
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:#0F172A; color:#F8FAFC;
+    font-family:'IBM Plex Sans',sans-serif;
+    overflow:hidden;
+  }
+  #deck{ position:relative; width:100vw; height:100vh; }
+  .slide{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; justify-content:center; align-items:center;
+    padding: 6vh 8vw 9vh 8vw;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(34,197,94,0.10), transparent 60%),
+      radial-gradient(1000px 700px at 100% 110%, rgba(245,158,11,0.10), transparent 55%),
+      #0F172A;
+  }
+  .slide.active{ display:flex; }
+  .frag{ opacity:0; transform:translateY(10px); transition:opacity .4s ease, transform .4s ease; }
+  .frag.shown{ opacity:1; transform:translateY(0); }
+  @media (prefers-reduced-motion: reduce){
+    .frag{ transition:none; }
+  }
+  :focus-visible{ outline:2px solid #22C55E; outline-offset:2px; }
+
+  /* Code block */
+  .code{
+    background:#0b0e1a; border:1px solid #475569; border-radius:12px;
+    padding:1.1rem 1.3rem; font-family:'IBM Plex Mono',monospace;
+    font-size: clamp(0.78rem, 1.15vw, 1rem); color:#F8FAFC; line-height:1.6;
+    overflow-x:auto; text-align:left; margin: 1.2rem 0; white-space:pre;
+  }
+  .code .k{ color:#22C55E; }
+  .code .c{ color:#94A3B8; font-style:italic; }
+
+  /* Growth mini-charts */
+  .growth-bars{ display:flex; align-items:flex-end; gap:.5rem; height: 110px; }
+  .growth-bars .bar{ width: 26px; background:#22C55E; border-radius: 4px 4px 0 0; }
+
+  /* Predict-then-reveal */
+  .predict-btn.answered-correct{ border-color:#22C55E !important; box-shadow:0 0 0 1px #22C55E inset; }
+  .predict-btn.answered-incorrect{ border-color:#EF4444 !important; opacity:.6; }
+  .predict-feedback{ display:none; }
+  .predict-feedback.shown{ display:block; }
+
+  #progress{
+    position:fixed; top:0; left:0; height:4px;
+    background:linear-gradient(90deg,#22C55E,#F59E0B);
+    width:0%; z-index:50; transition:width .25s ease;
+  }
+  .navzone{
+    position:fixed; top:0; bottom:0; width:64px; z-index:45;
+    background:transparent; border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    color:#94A3B8; opacity:0; transition:opacity .15s ease; font-size:1.6rem;
+  }
+  .navzone:hover{ opacity:1; }
+  #prevZone{ left:0; }
+  #nextZone{ right:0; }
+
+  #notesToggle.active{ background:#22C55E; color:#0F172A; border-color:#22C55E; font-weight:700; }
+  #commentsToggle.active{ background:#F59E0B; color:#0F172A; border-color:#F59E0B; font-weight:700; }
+  #notesPanel, #commentsPanel{
+    position:fixed; left:0; right:0; bottom:0; max-height:42vh; overflow-y:auto;
+    background:rgba(8,11,24,0.97); padding: 1.4rem 2.2rem 1.6rem 2.2rem;
+    transform:translateY(100%); transition:transform .25s ease; z-index:44;
+  }
+  #notesPanel.open, #commentsPanel.open{ transform:translateY(0); }
+  #commentsText:focus{ outline:none; border-color:#F59E0B; }
+
+  @media (max-width:820px){
+    .slide-badge{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div id="deck">
+
+  <!-- 1 -->
+  <section class="slide">
+    <div class="slide-badge absolute top-[6vh] right-[6vw] w-16 h-16 sm:w-20 sm:h-20 rounded-[20px] bg-card/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-3xl sm:text-4xl shadow-[0_10px_30px_rgba(0,0,0,0.25)] z-10">⚡</div>
+    <div class="slide-inner max-w-[1150px] w-full">
+      <div class="kicker inline-flex items-center gap-2 uppercase tracking-[.12em] text-sm font-bold text-amber mb-4 before:content-[''] before:w-6 before:h-[2px] before:bg-amber before:inline-block">Después del descanso</div>
+      <h1 class="text-[2rem] sm:text-4xl lg:text-5xl leading-[1.14] mb-4 font-extrabold tracking-tight">¿Por qué Pandas es tan <em class="not-italic text-accent">rápido</em>?</h1>
+      <p class="subtitle text-lg sm:text-xl text-mutedfg max-w-[46ch] -mt-1">Una pausa teórica corta antes de volver a limpiar los datos de Airbnb.</p>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p>Retoma la energía después del descanso. No hace falta anunciar "vamos a ver Big O" de entrada — abre con la pregunta, que suena más a curiosidad que a clase de algoritmos.</p>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide">
+    <div class="slide-badge absolute top-[6vh] right-[6vw] w-16 h-16 sm:w-20 sm:h-20 rounded-[20px] bg-card/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-3xl sm:text-4xl shadow-[0_10px_30px_rgba(0,0,0,0.25)] z-10">🐢</div>
+    <div class="slide-inner max-w-[1150px] w-full">
+      <div class="kicker inline-flex items-center gap-2 uppercase tracking-[.12em] text-sm font-bold text-amber mb-4 before:content-[''] before:w-6 before:h-[2px] before:bg-amber before:inline-block">Lo que ya vivieron</div>
+      <h1 class="text-[2rem] sm:text-4xl lg:text-5xl leading-[1.14] mb-4 font-extrabold tracking-tight">Dos formas de pedir lo mismo</h1>
+      <p class="body text-lg sm:text-xl leading-relaxed">En la Sesión 1 limpiaron una lista de productos así, uno por uno:</p>
+      <div class="code"><span class="c"># Python puro — un for, fila por fila</span>
+productos_limpios = []
+<span class="k">for</span> producto <span class="k">in</span> productos_sucios:
+    productos_limpios.append(producto.strip().title())</div>
+      <p class="body text-lg sm:text-xl leading-relaxed frag">Hoy limpiaron <code class="font-mono bg-white/10 rounded px-1.5 py-0.5 text-[0.85em]">name</code> en el dataset de Airbnb así:</p>
+      <div class="code frag"><span class="c"># Pandas — vectorizado, de una sola vez</span>
+df[<span class="k">"name"</span>] = df[<span class="k">"name"</span>].str.strip().str.title()</div>
+      <p class="quote text-2xl sm:text-3xl font-bold leading-snug border-l-4 border-amber pl-5 my-5 frag">Mismo resultado. ¿Importa cómo se lo pedimos?</p>
+    </div>
+    <div class="notes" data-time="3 min">
+      <p>Deja que la pregunta quede en el aire un momento antes de seguir — es el gancho de todo el bloque.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide">
+    <div class="slide-badge absolute top-[6vh] right-[6vw] w-16 h-16 sm:w-20 sm:h-20 rounded-[20px] bg-card/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-3xl sm:text-4xl shadow-[0_10px_30px_rgba(0,0,0,0.25)] z-10">⏱️</div>
+    <div class="slide-inner max-w-[1150px] w-full">
+      <div class="kicker inline-flex items-center gap-2 uppercase tracking-[.12em] text-sm font-bold text-amber mb-4 before:content-[''] before:w-6 before:h-[2px] before:bg-amber before:inline-block">Una palabra nueva</div>
+      <h1 class="text-[2rem] sm:text-4xl lg:text-5xl leading-[1.14] mb-4 font-extrabold tracking-tight">¿Qué es el "rendimiento" de un código?</h1>
+      <ul class="points list-none m-0 p-0 flex flex-col gap-3">
+        <li class="frag text-lg sm:text-xl leading-relaxed pl-8 relative before:content-['→'] before:absolute before:left-0 before:top-0 before:text-amber before:font-bold">No es solo <strong>que funcione</strong> — los dos códigos de la diapositiva anterior funcionan igual de bien.</li>
+        <li class="frag text-lg sm:text-xl leading-relaxed pl-8 relative before:content-['→'] before:absolute before:left-0 before:top-0 before:text-amber before:font-bold">Es <strong>cuánto tarda</strong>, y sobre todo, <strong>cuánto crece esa tardanza</strong> cuando los datos crecen.</li>
+        <li class="frag text-lg sm:text-xl leading-relaxed pl-8 relative before:content-['→'] before:absolute before:left-0 before:top-0 before:text-amber before:font-bold">5 filas o 48,895 filas (como el dataset de Airbnb) no son el mismo problema.</li>
+      </ul>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>El énfasis es en "cuánto crece", no en el tiempo exacto en segundos — eso prepara la idea de Big O de la siguiente diapositiva.</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide">
+    <div class="slide-badge absolute top-[6vh] right-[6vw] w-16 h-16 sm:w-20 sm:h-20 rounded-[20px] bg-card/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-3xl sm:text-4xl shadow-[0_10px_30px_rgba(0,0,0,0.25)] z-10">🔠</div>
+    <div class="slide-inner max-w-[1150px] w-full">
+      <div class="kicker inline-flex items-center gap-2 uppercase tracking-[.12em] text-sm font-bold text-amber mb-4 before:content-[''] before:w-6 before:h-[2px] before:bg-amber before:inline-block">La idea central</div>
+      <h1 class="text-[2rem] sm:text-4xl lg:text-5xl leading-[1.14] mb-4 font-extrabold tracking-tight">Notación Big O (O grande)</h1>
+      <p class="quote text-2xl sm:text-3xl font-bold leading-snug border-l-4 border-amber pl-5 my-5 frag">No es un número exacto de segundos — es una forma de describir qué tan rápido crece el tiempo cuando crecen los datos.</p>
+      <p class="body text-lg sm:text-xl leading-relaxed frag">Piensen en buscar un nombre: en una lista desordenada de 1,000 personas puede que tengan que revisar las 1,000; en una agenda ordenada alfabéticamente, encuentran el nombre casi de inmediato. Mismo problema, formas muy distintas de crecer.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>No escribas todavía la notación "O(n)" en el tablero — primero la intuición, la notación viene en la siguiente diapositiva.</p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide">
+    <div class="slide-badge absolute top-[6vh] right-[6vw] w-16 h-16 sm:w-20 sm:h-20 rounded-[20px] bg-card/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-3xl sm:text-4xl shadow-[0_10px_30px_rgba(0,0,0,0.25)] z-10">📊</div>
+    <div class="slide-inner max-w-[1150px] w-full">
+      <div class="kicker inline-flex items-center gap-2 uppercase tracking-[.12em] text-sm font-bold text-amber mb-4 before:content-[''] before:w-6 before:h-[2px] before:bg-amber before:inline-block">Los 3 casos más comunes</div>
+      <h1 class="text-[2rem] sm:text-4xl lg:text-5xl leading-[1.14] mb-5 font-extrabold tracking-tight">Así de rápido crecen</h1>
+      <div class="flex gap-5 flex-wrap mt-2">
+        <div class="frag flex-1 min-w-[220px] flex flex-col items-center gap-3 bg-card/60 backdrop-blur-md border border-white/10 rounded-2xl p-5">
+          <div class="growth-bars"><div class="bar" style="height:20%"></div><div class="bar" style="height:20%"></div><div class="bar" style="height:20%"></div><div class="bar" style="height:20%"></div></div>
+          <div class="text-center font-bold text-lg">O(1) — constante</div>
+          <div class="text-center text-sm text-mutedfg">Ej: leer <code class="font-mono bg-white/10 rounded px-1 py-0.5 text-[0.85em]">df.shape</code>. No importa si hay 10 o 10 millones de filas, tarda igual.</div>
+        </div>
+        <div class="frag flex-1 min-w-[220px] flex flex-col items-center gap-3 bg-card/60 backdrop-blur-md border border-white/10 rounded-2xl p-5">
+          <div class="growth-bars"><div class="bar" style="height:12.5%"></div><div class="bar" style="height:25%"></div><div class="bar" style="height:50%"></div><div class="bar" style="height:100%"></div></div>
+          <div class="text-center font-bold text-lg">O(n) — lineal</div>
+          <div class="text-center text-sm text-mutedfg">Ej: recorrer cada fila una vez. El doble de filas, el doble de tiempo.</div>
+        </div>
+        <div class="frag flex-1 min-w-[220px] flex flex-col items-center gap-3 bg-card/60 backdrop-blur-md border border-white/10 rounded-2xl p-5">
+          <div class="growth-bars"><div class="bar" style="height:1.5%"></div><div class="bar" style="height:6%"></div><div class="bar" style="height:25%"></div><div class="bar" style="height:100%"></div></div>
+          <div class="text-center font-bold text-lg">O(n²) — cuadrático</div>
+          <div class="text-center text-sm text-mutedfg">Ej: comparar cada fila con todas las demás. El doble de filas, cuatro veces más tiempo.</div>
+        </div>
+      </div>
+    </div>
+    <div class="notes" data-time="3 min">
+      <p>Señala especialmente la última barra de O(n²) — se dispara mucho más que las otras dos, esa es la imagen que se tienen que llevar.</p>
+      <p>No hace falta derivar las fórmulas ni pedirles que memoricen "O(n²)" — con que reconozcan la forma de la curva ya cumplió el objetivo.</p>
+      <p class="line">Las tres tarjetas ahora aparecen una a una — deja que la última (O(n²)) golpee sola, con una pausa antes de seguir.</p>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide">
+    <div class="slide-badge absolute top-[6vh] right-[6vw] w-16 h-16 sm:w-20 sm:h-20 rounded-[20px] bg-card/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-3xl sm:text-4xl shadow-[0_10px_30px_rgba(0,0,0,0.25)] z-10">🗂️</div>
+    <div class="slide-inner max-w-[1150px] w-full">
+      <div class="kicker inline-flex items-center gap-2 uppercase tracking-[.12em] text-sm font-bold text-amber mb-4 before:content-[''] before:w-6 before:h-[2px] before:bg-amber before:inline-block">Conectando con lo que ya saben</div>
+      <h1 class="text-[2rem] sm:text-4xl lg:text-5xl leading-[1.14] mb-4 font-extrabold tracking-tight">Buscar en una lista vs. en un diccionario</h1>
+      <p class="body text-lg sm:text-xl leading-relaxed">En Sesión 1 vieron listas y diccionarios. Tienen 1 millón de nombres — como <code class="font-mono bg-white/10 rounded px-1.5 py-0.5 text-[0.85em]">lista</code> y también como llaves de un <code class="font-mono bg-white/10 rounded px-1.5 py-0.5 text-[0.85em]">diccionario</code>. Buscan un nombre con <code class="font-mono bg-white/10 rounded px-1.5 py-0.5 text-[0.85em]">"Ana" in lista</code> vs. <code class="font-mono bg-white/10 rounded px-1.5 py-0.5 text-[0.85em]">"Ana" in diccionario</code>.</p>
+      <p class="text-xs sm:text-sm text-mutedfg uppercase tracking-wide font-bold mt-5 mb-2">¿Cuál creen que es más rápido?</p>
+      <div class="predict-row flex flex-col sm:flex-row gap-3" data-predict-group>
+        <button type="button" class="predict-btn text-left flex-1 bg-card/60 backdrop-blur-md border-2 border-edge rounded-xl px-5 py-4 min-h-[44px] transition-colors hover:border-amber/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber" data-correct="false">Buscar en la <strong>lista</strong> — es la misma idea de siempre, recorrerla.</button>
+        <button type="button" class="predict-btn text-left flex-1 bg-card/60 backdrop-blur-md border-2 border-edge rounded-xl px-5 py-4 min-h-[44px] transition-colors hover:border-accent/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent" data-correct="true">Buscar en el <strong>diccionario</strong> — va directo a la llave.</button>
+      </div>
+      <p class="predict-feedback caption text-base sm:text-lg text-mutedfg mt-4">✅ El diccionario: <code class="font-mono bg-white/10 rounded px-1 py-0.5 text-[0.85em]">"Ana" in lista</code> es <strong class="text-fg">O(n)</strong> — en el peor caso revisa el millón completo. <code class="font-mono bg-white/10 rounded px-1 py-0.5 text-[0.85em]">"Ana" in diccionario</code> es <strong class="text-fg">O(1)</strong> en promedio — va directo, sin importar cuántas llaves haya. Por dentro, Python usa <em>hashing</em> para lograrlo.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>No hace falta explicar cómo funciona el hashing por dentro — con que quede la intuición "el diccionario no tiene que revisar todo" alcanza para hoy.</p>
+      <p class="line">Este es exactamente el motivo práctico por el que, cuando puedan elegir, conviene usar un diccionario o un <code>set</code> en vez de una lista para preguntas de tipo "¿está esto aquí?".</p>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide">
+    <div class="slide-badge absolute top-[6vh] right-[6vw] w-16 h-16 sm:w-20 sm:h-20 rounded-[20px] bg-card/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-3xl sm:text-4xl shadow-[0_10px_30px_rgba(0,0,0,0.25)] z-10">🧩</div>
+    <div class="slide-inner max-w-[1150px] w-full">
+      <div class="kicker inline-flex items-center gap-2 uppercase tracking-[.12em] text-sm font-bold text-amber mb-4 before:content-[''] before:w-6 before:h-[2px] before:bg-amber before:inline-block">Uniendo las piezas</div>
+      <h1 class="text-[2rem] sm:text-4xl lg:text-5xl leading-[1.14] mb-4 font-extrabold tracking-tight">Por qué Pandas les ganó al <em class="not-italic text-accent">for</em></h1>
+      <p class="body text-lg sm:text-xl leading-relaxed frag">El <code class="font-mono bg-white/10 rounded px-1.5 py-0.5 text-[0.85em]">for</code> en Python puro y el <code class="font-mono bg-white/10 rounded px-1.5 py-0.5 text-[0.85em]">.str</code> de Pandas hacen, técnicamente, el mismo trabajo: O(n), una pasada por cada fila.</p>
+      <p class="body text-lg sm:text-xl leading-relaxed frag">La diferencia está en <strong>qué tan pesado es cada paso</strong>: el <code class="font-mono bg-white/10 rounded px-1.5 py-0.5 text-[0.85em]">for</code> de Python revisa fila por fila con el intérprete de Python (lento); Pandas/NumPy hacen ese mismo recorrido por dentro, en código C ya compilado (mucho más rápido).</p>
+      <p class="quote text-2xl sm:text-3xl font-bold leading-snug border-l-4 border-amber pl-5 my-5 frag">Honestidad: Big O no explica esa diferencia — describe cómo CRECE el tiempo, no cuánto pesa cada paso. Por eso dos códigos O(n) pueden tardar tiempos muy distintos en la práctica.</p>
+    </div>
+    <div class="notes" data-time="3 min">
+      <p>Este es el matiz importante que evita que se lleven una idea incompleta: Big O no es la única variable de rendimiento que existe.</p>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide">
+    <div class="slide-badge absolute top-[6vh] right-[6vw] w-16 h-16 sm:w-20 sm:h-20 rounded-[20px] bg-card/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-3xl sm:text-4xl shadow-[0_10px_30px_rgba(0,0,0,0.25)] z-10">🚀</div>
+    <div class="slide-inner max-w-[1150px] w-full">
+      <div class="kicker inline-flex items-center gap-2 uppercase tracking-[.12em] text-sm font-bold text-amber mb-4 before:content-[''] before:w-6 before:h-[2px] before:bg-amber before:inline-block">Por qué les debería importar</div>
+      <h1 class="text-[2rem] sm:text-4xl lg:text-5xl leading-[1.14] mb-4 font-extrabold tracking-tight">Hoy son 48,895 filas. Mañana pueden ser millones.</h1>
+      <p class="body text-lg sm:text-xl leading-relaxed frag">Con datasets pequeños, casi cualquier código "funciona rápido". La diferencia entre un <code class="font-mono bg-white/10 rounded px-1.5 py-0.5 text-[0.85em]">for</code> mal escrito y un método vectorizado deja de ser cosmética cuando el dataset crece de verdad.</p>
+      <p class="caption text-base sm:text-lg text-mutedfg mt-4 frag">Un análisis que tarda 2 segundos vectorizado puede tardar minutos —o más— con un <code class="font-mono bg-white/10 rounded px-1 py-0.5 text-[0.85em]">for</code> fila por fila sobre millones de registros.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Conecta con su futuro profesional: esto no es un capricho académico, es la razón práctica por la que la industria prefiere Pandas/NumPy sobre loops manuales.</p>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide">
+    <div class="slide-badge absolute top-[6vh] right-[6vw] w-16 h-16 sm:w-20 sm:h-20 rounded-[20px] bg-card/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-3xl sm:text-4xl shadow-[0_10px_30px_rgba(0,0,0,0.25)] z-10">🧼</div>
+    <div class="slide-inner max-w-[1150px] w-full">
+      <div class="kicker inline-flex items-center gap-2 uppercase tracking-[.12em] text-sm font-bold text-amber mb-4 before:content-[''] before:w-6 before:h-[2px] before:bg-amber before:inline-block">A la práctica</div>
+      <h1 class="text-[2rem] sm:text-4xl lg:text-5xl leading-[1.14] mb-4 font-extrabold tracking-tight">Volvamos a limpiar Airbnb</h1>
+      <p class="quote text-2xl sm:text-3xl font-bold leading-snug border-l-4 border-amber pl-5 my-5">Con esto en la cabeza, sigamos limpiando — ahora prestando atención a que lo hagamos de forma eficiente.</p>
+      <p class="body text-lg sm:text-xl leading-relaxed">Vamos al segundo notebook: outliers, valores nulos, y texto sucio en el dataset de Airbnb.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Transición directa al segundo tramo de "a la acción" (limpieza de texto y outliers).</p>
+    </div>
+  </section>
+
+</div>
+
+<button class="navzone" id="prevZone" aria-label="Anterior">‹</button>
+<button class="navzone" id="nextZone" aria-label="Siguiente">›</button>
+
+<div id="toolbar" class="fixed bottom-[6vh] left-5 z-[46] flex gap-2 flex-wrap">
+  <button id="notesToggle" class="bg-card/60 backdrop-blur-md border border-white/10 text-fg rounded-full px-4 py-2 text-sm cursor-pointer min-h-[44px]" title="Mostrar/ocultar notas del expositor (N)">Notas: off</button>
+  <button id="commentsToggle" class="bg-card/60 backdrop-blur-md border border-white/10 text-fg rounded-full px-4 py-2 text-sm cursor-pointer min-h-[44px]" title="Mostrar/ocultar tus comentarios (C)">💬 Comentarios</button>
+</div>
+
+<div id="notesPanel">
+  <h4 class="m-0 mb-2 text-amber text-sm uppercase tracking-wide"><span class="time text-accent font-bold" id="notesTime"></span></h4>
+  <div id="notesBody" class="text-fg leading-relaxed"></div>
+</div>
+
+<div id="commentsPanel">
+  <h4 id="commentsSlideLabel" class="m-0 mb-2 text-accent text-sm uppercase tracking-wide"></h4>
+  <textarea id="commentsText" class="w-full min-h-[110px] resize-y bg-muted text-fg border border-edge rounded-lg px-3.5 py-3 text-base font-sans leading-relaxed" placeholder="Escribe aquí tus comentarios sobre esta diapositiva: qué cambiar, qué quitar, qué agregar…"></textarea>
+  <div class="comments-actions flex items-center gap-3 mt-3 flex-wrap">
+    <button id="commentsClear" type="button" class="bg-card/60 border border-white/10 text-fg rounded-full px-4 py-2 text-sm cursor-pointer min-h-[44px]">Borrar este comentario</button>
+    <button id="commentsExport" type="button" class="bg-card/60 border border-white/10 text-fg rounded-full px-4 py-2 text-sm cursor-pointer min-h-[44px]">⬇ Exportar todos (.md)</button>
+    <span id="commentsCount" class="hint text-mutedfg text-sm"></span>
+  </div>
+</div>
+
+<div id="footer" class="fixed bottom-0 left-0 right-0 h-[6vh] min-h-[42px] flex items-center justify-between px-6 text-sm text-mutedfg bg-gradient-to-t from-black/35 to-transparent z-40">
+  <span class="course opacity-85">Introducción a la Ciencia de Datos · Sesión 2 · Rendimiento y Big O</span>
+  <span id="counter" class="hint tabular-nums">1 / 9</span>
+  <span class="hint opacity-60 hidden sm:inline">→ / espacio: siguiente / revela viñeta · ←: anterior · N: notas · C: comentarios · F: pantalla completa</span>
+</div>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let current = 0;
+  let fragIndex = 0;
+
+  document.querySelectorAll('.slide .points li').forEach(li => li.classList.add('frag'));
+
+  const progress = document.getElementById('progress');
+  const counter = document.getElementById('counter');
+  const notesToggle = document.getElementById('notesToggle');
+  const notesPanel = document.getElementById('notesPanel');
+  const notesBody = document.getElementById('notesBody');
+  const notesTime = document.getElementById('notesTime');
+
+  const commentsToggle = document.getElementById('commentsToggle');
+  const commentsPanel = document.getElementById('commentsPanel');
+  const commentsText = document.getElementById('commentsText');
+  const commentsSlideLabel = document.getElementById('commentsSlideLabel');
+  const commentsCount = document.getElementById('commentsCount');
+  const commentsClear = document.getElementById('commentsClear');
+  const commentsExport = document.getElementById('commentsExport');
+
+  const COMMENTS_KEY = 'big_o_comments_v1';
+  function loadComments(){
+    try { return JSON.parse(localStorage.getItem(COMMENTS_KEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function saveComments(){
+    try { localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments)); }
+    catch(e){ /* localStorage no disponible, se pierde al recargar */ }
+  }
+  let comments = loadComments();
+
+  function slideTitle(idx){
+    const h1 = slides[idx].querySelector('h1');
+    return h1 ? h1.textContent.trim() : ('Diapositiva ' + (idx + 1));
+  }
+
+  function updateCommentsCount(){
+    const n = Object.keys(comments).filter(k => comments[k] && comments[k].trim()).length;
+    commentsCount.textContent = n ? (n + ' diapositiva' + (n === 1 ? '' : 's') + ' con comentarios') : 'Sin comentarios guardados todavía';
+  }
+
+  function renderComments(){
+    commentsSlideLabel.textContent = 'Comentarios — diapositiva ' + (current + 1) + ' / ' + total + ': ' + slideTitle(current);
+    commentsText.value = comments[current] || '';
+    updateCommentsCount();
+  }
+
+  function renderNotes(){
+    const n = slides[current].querySelector('.notes');
+    notesBody.innerHTML = n ? n.innerHTML : '<p>(Sin notas para esta diapositiva)</p>';
+    notesTime.textContent = n && n.dataset.time ? ('Tiempo sugerido: ' + n.dataset.time) : '';
+  }
+
+  function currentFrags(){
+    return Array.from(slides[current].querySelectorAll('.frag'));
+  }
+
+  function setupFragments(dir){
+    const frags = currentFrags();
+    if (dir === 'backward') {
+      frags.forEach(f => f.classList.add('shown'));
+      fragIndex = frags.length;
+    } else {
+      frags.forEach(f => f.classList.remove('shown'));
+      fragIndex = 0;
+    }
+  }
+
+  function goTo(i){
+    const target = Math.max(0, Math.min(total - 1, i));
+    const dir = target < current ? 'backward' : 'forward';
+    current = target;
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === current));
+    progress.style.width = (((current + 1) / total) * 100) + '%';
+    counter.textContent = (current + 1) + ' / ' + total;
+    setupFragments(dir);
+    if (notesPanel.classList.contains('open')) renderNotes();
+    if (commentsPanel.classList.contains('open')) renderComments();
+    location.hash = 'slide-' + (current + 1);
+  }
+
+  function next(){
+    const frags = currentFrags();
+    if (fragIndex < frags.length) {
+      frags[fragIndex].classList.add('shown');
+      fragIndex++;
+      return;
+    }
+    goTo(current + 1);
+  }
+  function prev(){
+    if (fragIndex > 0) {
+      const frags = currentFrags();
+      fragIndex--;
+      frags[fragIndex].classList.remove('shown');
+      return;
+    }
+    goTo(current - 1);
+  }
+
+  function toggleNotes(){
+    const opening = !notesPanel.classList.contains('open');
+    notesPanel.classList.toggle('open', opening);
+    notesToggle.classList.toggle('active', opening);
+    notesToggle.textContent = 'Notas: ' + (opening ? 'on' : 'off');
+    if (opening) {
+      commentsPanel.classList.remove('open');
+      commentsToggle.classList.remove('active');
+      commentsToggle.textContent = '💬 Comentarios';
+      renderNotes();
+    }
+  }
+
+  function toggleComments(){
+    const opening = !commentsPanel.classList.contains('open');
+    commentsPanel.classList.toggle('open', opening);
+    commentsToggle.classList.toggle('active', opening);
+    commentsToggle.textContent = opening ? '💬 Comentarios: on' : '💬 Comentarios';
+    if (opening) {
+      notesPanel.classList.remove('open');
+      notesToggle.classList.remove('active');
+      notesToggle.textContent = 'Notas: off';
+      renderComments();
+    }
+  }
+
+  function exportComments(){
+    const entries = Object.keys(comments)
+      .map(k => parseInt(k, 10))
+      .filter(idx => comments[idx] && comments[idx].trim())
+      .sort((a, b) => a - b);
+    if (!entries.length) {
+      alert('Todavía no hay comentarios guardados en ninguna diapositiva.');
+      return;
+    }
+    let md = '# Comentarios — Sesión 2: Rendimiento y Big O\n\n';
+    entries.forEach(idx => {
+      md += '## Diapositiva ' + (idx + 1) + ': ' + slideTitle(idx) + '\n\n' + comments[idx].trim() + '\n\n';
+    });
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'comentarios-sesion-02-big-o.md';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(md).catch(() => {});
+    }
+  }
+
+  function toggleFullscreen(){
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(()=>{});
+    } else {
+      document.exitFullscreen().catch(()=>{});
+    }
+  }
+
+  document.getElementById('prevZone').addEventListener('click', prev);
+  document.getElementById('nextZone').addEventListener('click', next);
+  notesToggle.addEventListener('click', toggleNotes);
+  commentsToggle.addEventListener('click', toggleComments);
+  commentsExport.addEventListener('click', exportComments);
+  commentsClear.addEventListener('click', () => {
+    delete comments[current];
+    saveComments();
+    renderComments();
+  });
+  commentsText.addEventListener('input', () => {
+    comments[current] = commentsText.value;
+    saveComments();
+    updateCommentsCount();
+  });
+
+  // Predict-then-reveal (nuevo)
+  document.querySelectorAll('[data-predict-group]').forEach(group => {
+    const buttons = Array.from(group.querySelectorAll('.predict-btn'));
+    const feedback = group.parentElement.querySelector('.predict-feedback');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        buttons.forEach(b => {
+          b.disabled = true;
+          b.classList.add(b.dataset.correct === 'true' ? 'answered-correct' : 'answered-incorrect');
+        });
+        if (feedback) feedback.classList.add('shown');
+      });
+    });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const tag = e.target && e.target.tagName;
+    if (tag === 'TEXTAREA' || tag === 'INPUT') {
+      if (e.key === 'Escape') { e.target.blur(); }
+      return;
+    }
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if (e.key.toLowerCase() === 'n') { toggleNotes(); }
+    else if (e.key.toLowerCase() === 'c') { toggleComments(); }
+    else if (e.key.toLowerCase() === 'f') { toggleFullscreen(); }
+    else if (e.key === 'Home') { goTo(0); }
+    else if (e.key === 'End') { goTo(total - 1); }
+  });
+
+  const hashMatch = location.hash.match(/slide-(\d+)/);
+  const startAt = hashMatch ? (parseInt(hashMatch[1], 10) - 1) : 0;
+  goTo(isNaN(startAt) ? 0 : startAt);
+})();
+</script>
+
+</body>
+</html>

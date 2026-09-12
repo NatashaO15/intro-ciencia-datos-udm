@@ -4,253 +4,185 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sesión 1 · Análisis Descriptivo</title>
-<style>
-  :root{
-    --bg: #0f1428;
-    --bg-2: #161c38;
-    --text: #f4f1ea;
-    --text-dim: #b7bedb;
-    --accent: #f2a94b;
-    --accent-2: #5eeacb;
-    --card: rgba(255,255,255,0.06);
-    --card-border: rgba(255,255,255,0.14);
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bg: '#0F172A',
+          card: '#1B2336',
+          muted: '#272F42',
+          mutedfg: '#94A3B8',
+          fg: '#F8FAFC',
+          edge: '#475569',
+          accent: '#22C55E',
+          amber: '#F59E0B',
+          danger: '#EF4444'
+        },
+        fontFamily: {
+          sans: ['IBM Plex Sans', 'sans-serif'],
+          mono: ['IBM Plex Mono', 'monospace']
+        }
+      }
+    }
   }
-  *{ box-sizing: border-box; }
-  html,body{
-    margin:0; padding:0; height:100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    overflow: hidden;
+</script>
+<style type="text/tailwindcss">
+  @layer base {
+    html, body { @apply h-full m-0 p-0 overflow-hidden bg-bg text-fg font-sans; }
+    :focus-visible { @apply outline outline-2 outline-offset-2 outline-accent; }
   }
-  #deck{ position: relative; width: 100vw; height: 100vh; }
-  .slide{
-    position: absolute; inset: 0; display: none;
-    flex-direction: column; justify-content: center; align-items: center;
-    padding: 6vh 8vw 9vh 8vw;
-    background:
-      radial-gradient(1200px 600px at 15% -10%, rgba(94,234,203,0.10), transparent 60%),
-      radial-gradient(1000px 700px at 100% 110%, rgba(242,169,75,0.10), transparent 55%),
-      var(--bg);
-  }
-  .slide.active{ display:flex; }
-  .slide-inner{ max-width: 1150px; width: 100%; }
-  .slide-badge{
-    position: absolute; top: 6vh; right: 6vw;
-    width: clamp(56px, 7vw, 88px); height: clamp(56px, 7vw, 88px);
-    border-radius: 20px;
-    background: var(--card); border: 1px solid var(--card-border);
-    display:flex; align-items:center; justify-content:center;
-    font-size: clamp(1.8rem, 3vw, 2.6rem);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    z-index: 2; line-height: 1;
-  }
-  .kicker{
-    display:inline-flex; align-items:center; gap:.5em;
-    text-transform: uppercase; letter-spacing: .12em;
-    font-size: clamp(0.85rem, 1.1vw, 1rem); font-weight: 700;
-    color: var(--accent); margin-bottom: 1.1rem;
-  }
-  .kicker::before{ content:""; width: 1.6em; height: 2px; background: var(--accent); display:inline-block; }
-  h1{
-    font-size: clamp(2rem, 4.2vw, 3.2rem); line-height: 1.14;
-    margin: 0 0 1.1rem 0; font-weight: 800; letter-spacing: -0.01em;
-  }
-  h1 em{ color: var(--accent-2); font-style: normal; }
-  .subtitle{
-    font-size: clamp(1.05rem, 1.7vw, 1.35rem); color: var(--text-dim);
-    margin: -0.4rem 0 2rem 0; max-width: 46ch;
-  }
-  .body{ font-size: clamp(1.02rem, 1.55vw, 1.3rem); line-height: 1.55; color: var(--text); }
-  .body p{ margin: 0 0 1rem 0; }
-  ul.points{ list-style: none; margin: 0; padding: 0; display:flex; flex-direction:column; gap: .8rem; }
-  ul.points li{ font-size: clamp(1.0rem, 1.5vw, 1.25rem); line-height: 1.5; padding-left: 1.6em; position: relative; }
-  ul.points li::before{ content: "→"; position: absolute; left: 0; top: 0; color: var(--accent); font-weight: 700; }
-  ul.points.check li::before{ content: "✓"; color: var(--accent-2); }
-  .frag{ opacity: 0; transform: translateY(10px); transition: opacity .4s ease, transform .4s ease; }
-  .frag.shown{ opacity: 1; transform: translateY(0); }
+  @layer components {
+    .slide {
+      @apply absolute inset-0 hidden flex-col items-center justify-center;
+      padding: 6vh 8vw 9vh 8vw;
+      background:
+        radial-gradient(1200px 600px at 15% -10%, rgba(34,197,94,0.12), transparent 60%),
+        radial-gradient(1000px 700px at 100% 110%, rgba(245,158,11,0.10), transparent 55%),
+        theme('colors.bg');
+    }
+    .slide.is-active { @apply flex; }
+    .slide-inner { @apply max-w-[1150px] w-full relative z-10; }
+    .slide-badge {
+      @apply hidden md:flex absolute items-center justify-center rounded-2xl bg-white/5 border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.25)] z-10 leading-none;
+      top: 6vh; right: 6vw;
+      width: clamp(56px,7vw,88px); height: clamp(56px,7vw,88px);
+      font-size: clamp(1.8rem,3vw,2.6rem);
+    }
+    .kicker {
+      @apply inline-flex items-center gap-2 uppercase tracking-[0.12em] font-bold text-amber mb-[1.1rem];
+      font-size: clamp(0.85rem,1.1vw,1rem);
+    }
+    .kicker::before { content:""; @apply w-6 h-0.5 bg-amber inline-block; }
+    h1 { @apply font-bold tracking-tight mb-[1.1rem]; font-size: clamp(2rem,4.2vw,3.2rem); line-height:1.14; }
+    h1 em { @apply text-accent not-italic; }
+    .subtitle { @apply text-mutedfg max-w-[46ch]; font-size: clamp(1.05rem,1.7vw,1.35rem); margin: -0.4rem 0 2rem 0; }
+    .body-text { @apply leading-[1.55] text-fg; font-size: clamp(1.02rem,1.55vw,1.3rem); }
+    .body-text p { @apply mb-4; }
+    .body-text p:last-child { @apply mb-0; }
+    ul.points { @apply list-none m-0 p-0 flex flex-col gap-[0.8rem]; }
+    ul.points > li { @apply relative pl-[1.6em]; font-size: clamp(1rem,1.5vw,1.25rem); line-height:1.5; }
+    ul.points > li::before { content:"→"; @apply absolute left-0 top-0 text-amber font-bold; }
+    ul.points.check > li::before { content:"✓"; @apply text-accent; }
+    .frag { @apply opacity-0 transition-all duration-[400ms] ease-out; transform: translateY(10px); }
+    .frag.shown { @apply opacity-100; transform: translateY(0); }
 
-  .quote{
-    font-size: clamp(1.3rem, 2.4vw, 1.9rem); font-weight: 700; line-height: 1.4;
-    color: var(--text); border-left: 4px solid var(--accent); padding-left: 1.1rem; margin: 1.2rem 0;
-  }
-  .formula{
-    display:inline-block; background: var(--card); border: 1px solid var(--card-border);
-    border-radius: 10px; padding: .6rem 1.1rem; margin: 1rem 0;
-    font-family: Menlo, Consolas, "SFMono-Regular", monospace;
-    font-size: clamp(0.95rem, 1.5vw, 1.2rem); color: var(--accent-2);
-  }
-  .caption{ font-size: clamp(0.95rem, 1.3vw, 1.1rem); color: var(--text-dim); margin-top: 1rem; }
-  .caption strong{ color: var(--text); }
+    .quote { @apply font-bold leading-[1.4] border-l-4 border-amber pl-[1.1rem]; font-size: clamp(1.3rem,2.4vw,1.9rem); margin: 1.2rem 0; }
+    .formula { @apply inline-block bg-white/5 border border-white/10 rounded-xl font-mono text-accent; padding:.6rem 1.1rem; margin:1rem 0; font-size: clamp(0.95rem,1.5vw,1.2rem); }
+    .caption { @apply text-mutedfg; font-size: clamp(0.95rem,1.3vw,1.1rem); margin-top:1rem; }
+    .caption strong { @apply text-fg; }
 
-  /* Trio (resumir / comunicar / decidir) */
-  .trio{ display:flex; gap: 1.4rem; margin: 1.6rem 0; flex-wrap:wrap; }
-  .trio .item{
-    flex: 1 1 140px; text-align:center; background: var(--card); border:1px solid var(--card-border);
-    border-radius: 14px; padding: 1.2rem 1rem;
-  }
-  .trio .item .e{ font-size: 2rem; display:block; margin-bottom:.4rem; }
-  .trio .item .l{ font-size: clamp(0.95rem,1.3vw,1.1rem); font-weight:700; }
+    /* Trio (resumir / comunicar / decidir) */
+    .trio { @apply flex flex-wrap gap-5; margin: 1.6rem 0; }
+    .trio .item { @apply flex-1 basis-36 text-center bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl; padding: 1.2rem 1rem; }
+    .trio .item .e { @apply block text-3xl mb-1.5; }
+    .trio .item .l { @apply font-bold; font-size: clamp(0.95rem,1.3vw,1.1rem); }
 
-  /* Mini histograms (shapes of data) */
-  .hist-row{ display:flex; gap: 1.2rem; flex-wrap: wrap; justify-content:center; margin-top: 1rem; }
-  .hist{
-    display:flex; flex-direction:column; align-items:center; gap:.7rem;
-    background: var(--card); border:1px solid var(--card-border); border-radius:14px;
-    padding: 1.1rem 1.2rem; flex:1 1 190px;
-  }
-  .hist-bars{ display:flex; align-items:flex-end; gap:.3rem; height: 100px; }
-  .hist-bars .bar{ width: 13px; background: var(--accent-2); border-radius: 4px 4px 0 0; }
-  .hist .label{ font-size: .82rem; color: var(--text-dim); text-align:center; }
+    /* Mini histograms (shapes of data) */
+    .hist-row { @apply flex flex-wrap gap-5 justify-center; margin-top: 1rem; }
+    .hist { @apply flex flex-col items-center gap-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl flex-1 basis-48; padding: 1.1rem 1.2rem; }
+    .hist-bars { @apply flex items-end gap-1; height: 100px; }
+    .hist-bars .bar { @apply bg-accent rounded-t; width: 13px; }
+    .hist .label { @apply text-mutedfg text-center; font-size: .82rem; }
 
-  /* Number line with dots + mean/median markers */
-  .numline-wrap{ margin: 2.6rem 0 1rem 0; }
-  .numline{ position: relative; height: 64px; }
-  .numline .track{ position:absolute; left:0; right:0; top:32px; height:2px; background: var(--card-border); }
-  .numline .dot{
-    position:absolute; top:25px; width:14px; height:14px; border-radius:50%;
-    background: var(--text-dim); transform: translateX(-50%); border:2px solid var(--bg);
-  }
-  .numline .marker{ position:absolute; top:-34px; transform: translateX(-50%); text-align:center; }
-  .numline .marker .tag{
-    font-size:.75rem; font-weight:800; white-space:nowrap; padding:.15rem .55rem; border-radius:999px;
-  }
-  .numline .marker.media .tag{ background: var(--accent); color: var(--bg); }
-  .numline .marker.mediana .tag{ background: var(--accent-2); color: var(--bg); }
-  .numline .marker .line{ position:absolute; left:50%; top: 22px; width:2px; height:36px; transform: translateX(-50%); }
-  .numline .marker.media .line{ background: var(--accent); }
-  .numline .marker.mediana .line{ background: var(--accent-2); }
+    /* Number line with dots + mean/median markers */
+    .numline-wrap { margin: 2.6rem 0 1rem 0; }
+    .numline { @apply relative; height: 64px; }
+    .numline .track { @apply absolute left-0 right-0 bg-edge; top:32px; height:2px; }
+    .numline .dot { @apply absolute rounded-full bg-mutedfg border-2 border-bg; top:25px; width:14px; height:14px; transform: translateX(-50%); }
+    .numline .marker { @apply absolute text-center; top:-34px; transform: translateX(-50%); }
+    .numline .marker .tag { @apply font-extrabold whitespace-nowrap rounded-full; font-size:.75rem; padding:.15rem .55rem; }
+    .numline .marker.media .tag { @apply bg-amber text-bg; }
+    .numline .marker.mediana .tag { @apply bg-accent text-bg; }
+    .numline .marker .line { @apply absolute; left:50%; top:22px; width:2px; height:36px; transform: translateX(-50%); }
+    .numline .marker.media .line { @apply bg-amber; }
+    .numline .marker.mediana .line { @apply bg-accent; }
 
-  .dual-numline .row-label{ font-size:.85rem; color: var(--text-dim); margin-bottom:.3rem; }
-  .dual-numline .group{ margin-bottom: 1.6rem; }
+    .dual-numline .row-label { @apply text-mutedfg mb-1; font-size:.85rem; }
+    .dual-numline .group { margin-bottom: 1.6rem; }
 
-  /* Real histogram chart (TiendaExpress exercise) */
-  .chart{ margin: 2.2rem 0 0.6rem 0; }
-  .chart-plot{
-    position: relative; display:flex; align-items:flex-end;
-    height: 170px; padding-top: 2.2rem; gap: 2px;
-  }
-  .chart-bar-wrap{
-    flex: 1 1 0; height: 100%; display:flex; flex-direction:column;
-    align-items:center; justify-content:flex-end; position:relative;
-  }
-  .chart-bar{ width: 100%; background: var(--accent-2); border-radius: 4px 4px 0 0; min-height: 2px; }
-  .chart-bar-value{ font-size: .78rem; color: var(--text-dim); margin-bottom: .3rem; }
-  .chart-marker-line{ position:absolute; top:0; bottom:0; width:2px; transform: translateX(-50%); z-index:2; }
-  .chart-marker-line.media{ background: var(--accent); }
-  .chart-marker-line.mediana{ background: var(--accent-2); }
-  .chart-marker-tag{
-    position:absolute; top:-1.9rem; transform: translateX(-50%);
-    font-size:.72rem; font-weight:800; white-space:nowrap; padding:.12rem .5rem; border-radius:999px;
-  }
-  .chart-marker-tag.media{ background: var(--accent); color: var(--bg); }
-  .chart-marker-tag.mediana{ background: var(--accent-2); color: var(--bg); }
-  .chart-axis{ display:flex; gap:2px; margin-top:.5rem; }
-  .chart-axis span{ flex:1 1 0; text-align:center; font-size:.7rem; color: var(--text-dim); }
+    /* Real histogram chart (TiendaExpress exercise) */
+    .chart { margin: 2.2rem 0 0.6rem 0; }
+    .chart-plot { @apply relative flex items-end gap-0.5; height:170px; padding-top:2.2rem; }
+    .chart-bar-wrap { @apply flex-1 h-full flex flex-col items-center justify-end relative; }
+    .chart-bar { @apply w-full bg-accent rounded-t; min-height:2px; }
+    .chart-bar-value { @apply text-mutedfg mb-1; font-size:.78rem; }
+    .chart-marker-line { @apply absolute top-0 bottom-0; width:2px; transform: translateX(-50%); z-index:2; }
+    .chart-marker-line.media { @apply bg-amber; }
+    .chart-marker-line.mediana { @apply bg-accent; }
+    .chart-marker-tag { @apply absolute font-extrabold whitespace-nowrap rounded-full; top:-1.9rem; transform: translateX(-50%); font-size:.72rem; padding:.12rem .5rem; }
+    .chart-marker-tag.media { @apply bg-amber text-bg; }
+    .chart-marker-tag.mediana { @apply bg-accent text-bg; }
+    .chart-axis { @apply flex gap-0.5; margin-top:.5rem; }
+    .chart-axis span { @apply flex-1 text-center text-mutedfg; font-size:.7rem; }
 
-  /* Scatter plot (dispersión de las 30 entregas) */
-  .scatter-wrap{ margin: 1.8rem 0 0.6rem 2.6rem; }
-  .scatter{ position:relative; height: 210px; }
-  .scatter-axis{ position:absolute; left:-2.6rem; top:0; bottom:0; width:2.4rem; }
-  .scatter-axis .tick{ position:absolute; right:.5rem; transform:translateY(-50%); font-size:.72rem; color: var(--text-dim); }
-  .scatter-band{
-    position:absolute; left:0; right:0;
-    background: rgba(94,234,203,0.12);
-    border-top:1px dashed var(--accent-2); border-bottom:1px dashed var(--accent-2);
-  }
-  .scatter-mean-line{ position:absolute; left:0; right:0; height:2px; background: var(--accent); }
-  .scatter-mean-tag{
-    position:absolute; right:0; transform:translateY(-100%);
-    font-size:.7rem; font-weight:800; background: var(--accent); color: var(--bg);
-    padding:.1rem .5rem; border-radius:999px; white-space:nowrap;
-  }
-  .scatter-baseline{ position:absolute; left:0; right:0; bottom:0; height:1px; background: var(--card-border); }
-  .scatter-dot{
-    position:absolute; width:10px; height:10px; border-radius:50%;
-    background: var(--text-dim); transform:translate(-50%,-50%); border:2px solid var(--bg);
-  }
-  .scatter-dot.outlier{
-    background: var(--accent); width:14px; height:14px;
-    box-shadow: 0 0 0 4px rgba(242,169,75,0.22);
-  }
-  .scatter-tag{
-    position:absolute; transform: translate(-50%, -140%);
-    font-size:.68rem; font-weight:700; color: var(--accent); white-space:nowrap;
-  }
+    /* Scatter plot (dispersión de las 30 entregas) */
+    .scatter-wrap { margin: 1.8rem 0 0.6rem 2.6rem; }
+    .scatter { @apply relative; height: 210px; }
+    .scatter-axis { @apply absolute top-0 bottom-0; left:-2.6rem; width:2.4rem; }
+    .scatter-axis .tick { @apply absolute text-mutedfg; right:.5rem; transform:translateY(-50%); font-size:.72rem; }
+    .scatter-band { @apply absolute left-0 right-0 border-accent/70; background: rgba(34,197,94,0.12); border-top-width:1px; border-bottom-width:1px; border-style:dashed; }
+    .scatter-mean-line { @apply absolute left-0 right-0 bg-amber; height:2px; }
+    .scatter-mean-tag { @apply absolute font-extrabold whitespace-nowrap rounded-full bg-amber text-bg; right:0; transform:translateY(-100%); font-size:.7rem; padding:.1rem .5rem; }
+    .scatter-baseline { @apply absolute left-0 right-0 bottom-0 bg-edge; height:1px; }
+    .scatter-dot { @apply absolute rounded-full bg-mutedfg border-2 border-bg; width:10px; height:10px; transform:translate(-50%,-50%); }
+    .scatter-dot.outlier { @apply bg-amber; width:14px; height:14px; box-shadow: 0 0 0 4px rgba(245,158,11,0.22); }
+    .scatter-tag { @apply absolute font-bold text-amber whitespace-nowrap; transform: translate(-50%, -140%); font-size:.68rem; }
 
-  /* Chrome: progress bar, toolbar, footer, nav, notes/comments */
-  #progress{
-    position:fixed; top:0; left:0; height:4px;
-    background: linear-gradient(90deg, var(--accent), var(--accent-2));
-    width:0%; z-index: 50; transition: width .25s ease;
-  }
-  #footer{
-    position:fixed; bottom:0; left:0; right:0; height: 6vh; min-height:42px;
-    display:flex; align-items:center; justify-content:space-between; padding: 0 1.6rem;
-    font-size: 0.8rem; color: var(--text-dim);
-    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.35)); z-index: 40;
-  }
-  #footer .course{ opacity:.85; }
-  #footer .hint{ opacity:.6; }
-  #counter{ font-variant-numeric: tabular-nums; }
+    /* Dinámica: predicción antes de revelar */
+    .predict-row { @apply flex flex-wrap gap-3; margin-top: 1.3rem; }
+    .predict-btn { @apply flex-1 basis-48 min-h-[44px] text-center bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl font-bold text-fg cursor-pointer transition; padding: .8rem 1.1rem; }
+    .predict-btn:hover { @apply border-accent/60 bg-white/10; }
+    .predict-btn.correct { @apply border-accent ring-1 ring-accent bg-accent/10; }
+    .predict-btn.incorrect { @apply border-amber/60 bg-amber/10; }
+    .predict-btn.dim { @apply opacity-50; }
+    .predict-feedback { @apply hidden; margin-top: 1rem; }
+    .predict-feedback.shown { @apply block; }
 
-  .navzone{
-    position:fixed; top:0; bottom:0; width: 64px; z-index: 45;
-    background: transparent; border:none; cursor: pointer;
-    display:flex; align-items:center; justify-content:center;
-    color: var(--text-dim); opacity:0; transition: opacity .15s ease; font-size: 1.6rem;
-  }
-  .navzone:hover{ opacity: 1; }
-  #prevZone{ left:0; }
-  #nextZone{ right:0; }
+    #progress { @apply fixed top-0 left-0 h-1 z-50; background: linear-gradient(90deg, theme('colors.amber'), theme('colors.accent')); width:0%; transition: width .25s ease; }
+    #footer { @apply fixed bottom-0 left-0 right-0 flex items-center justify-between px-6 text-mutedfg z-40; height:6vh; min-height:42px; font-size:0.8rem; background: linear-gradient(180deg, transparent, rgba(0,0,0,0.35)); }
+    #footer .course { @apply opacity-85; }
+    #footer .hint { @apply opacity-60 hidden lg:inline; }
+    #counter { font-variant-numeric: tabular-nums; }
 
-  #toolbar{ position: fixed; bottom: 6vh; left: 1.2rem; z-index: 46; display:flex; gap:.6rem; flex-wrap:wrap; }
-  #notesToggle, #commentsToggle{
-    background: var(--card); border:1px solid var(--card-border);
-    color: var(--text); border-radius: 999px; padding: .4rem .9rem;
-    font-size: .8rem; cursor:pointer;
-  }
-  #notesToggle.active{ background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight:700; }
-  #commentsToggle.active{ background: var(--accent-2); color: var(--bg); border-color: var(--accent-2); font-weight:700; }
+    .navzone { @apply fixed top-0 bottom-0 w-16 z-[45] bg-transparent border-none cursor-pointer flex items-center justify-center text-mutedfg opacity-0 transition-opacity; font-size:1.6rem; }
+    .navzone:hover, .navzone:focus-visible { @apply opacity-100; }
+    #prevZone { @apply left-0; }
+    #nextZone { @apply right-0; }
 
-  #notesPanel, #commentsPanel{
-    position: fixed; left:0; right:0; bottom:0; max-height: 42vh; overflow-y:auto;
-    background: rgba(8,11,24,0.97); padding: 1.4rem 2.2rem 1.6rem 2.2rem;
-    transform: translateY(100%); transition: transform .25s ease; z-index: 44;
-  }
-  #notesPanel{ border-top: 2px solid var(--accent); }
-  #commentsPanel{ border-top: 2px solid var(--accent-2); }
-  #notesPanel.open, #commentsPanel.open{ transform: translateY(0); }
-  #notesPanel h4, #commentsPanel h4{
-    margin: 0 0 .6rem 0; color: var(--accent); font-size: .95rem;
-    text-transform:uppercase; letter-spacing:.08em;
-  }
-  #commentsPanel h4{ color: var(--accent-2); }
-  #notesPanel .time{ color: var(--accent-2); font-weight:700; }
-  #notesPanel ul{ margin:.3rem 0 .8rem 1.1rem; padding:0; }
-  #notesPanel li{ margin-bottom:.35rem; line-height:1.45; font-size:.95rem; }
-  #notesPanel p{ line-height:1.5; font-size:.95rem; margin: 0 0 .6rem 0;}
-  #notesPanel .line{ color: var(--text-dim); font-style: italic; }
+    #toolbar { @apply fixed left-5 z-[46] flex gap-2.5 flex-wrap; bottom:6vh; }
+    #notesToggle, #commentsToggle { @apply bg-white/5 border border-white/10 text-fg rounded-full cursor-pointer min-h-[44px]; padding:.4rem .9rem; font-size:.8rem; }
+    #notesToggle.active { @apply bg-amber text-bg border-amber font-bold; }
+    #commentsToggle.active { @apply bg-accent text-bg border-accent font-bold; }
 
-  #commentsText{
-    width:100%; min-height: 110px; resize: vertical; background: var(--bg-2); color: var(--text);
-    border: 1px solid var(--card-border); border-radius: 10px; padding: .8rem .9rem;
-    font-size: .95rem; font-family: inherit; line-height: 1.5;
-  }
-  #commentsText:focus{ outline: none; border-color: var(--accent-2); }
-  .comments-actions{ display:flex; align-items:center; gap:.7rem; margin-top:.7rem; flex-wrap:wrap; }
-  .comments-actions button{
-    background: var(--card); border:1px solid var(--card-border); color: var(--text);
-    border-radius: 999px; padding: .4rem .9rem; font-size: .8rem; cursor:pointer;
-  }
-  .comments-actions button:hover{ border-color: var(--accent-2); }
-  .comments-actions .hint{ font-size: .8rem; color: var(--text-dim); }
+    #notesPanel, #commentsPanel { @apply fixed left-0 right-0 bottom-0 overflow-y-auto z-[44]; max-height:42vh; background: rgba(8,11,24,0.97); padding: 1.4rem 2.2rem 1.6rem 2.2rem; transform: translateY(100%); transition: transform .25s ease; }
+    #notesPanel { @apply border-t-2 border-amber; }
+    #commentsPanel { @apply border-t-2 border-accent; }
+    #notesPanel.open, #commentsPanel.open { transform: translateY(0); }
+    #notesPanel h4, #commentsPanel h4 { @apply mb-2.5 text-amber uppercase tracking-[0.08em]; font-size:.95rem; }
+    #commentsPanel h4 { @apply text-accent; }
+    #notesPanel .time { @apply text-accent font-bold; }
+    #notesPanel ul { margin:.3rem 0 .8rem 1.1rem; padding:0; }
+    #notesPanel li { margin-bottom:.35rem; line-height:1.45; font-size:.95rem; }
+    #notesPanel p { line-height:1.5; font-size:.95rem; margin:0 0 .6rem 0; }
+    #notesPanel .line { @apply text-mutedfg italic; }
 
-  .notes{ display:none; }
+    #commentsText { @apply w-full bg-muted text-fg border border-white/10 rounded-xl font-sans; min-height:110px; resize:vertical; padding:.8rem .9rem; font-size:.95rem; line-height:1.5; }
+    #commentsText:focus { @apply outline-none border-accent; }
+    .comments-actions { @apply flex items-center gap-2.5 mt-2.5 flex-wrap; }
+    .comments-actions button { @apply bg-white/5 border border-white/10 text-fg rounded-full cursor-pointer min-h-[44px]; padding:.4rem .9rem; font-size:.8rem; }
+    .comments-actions button:hover { @apply border-accent; }
+    .comments-actions .hint { @apply text-mutedfg; font-size:.8rem; }
 
-  @media (max-width: 820px){
-    .hist-row{ flex-direction: column; }
-    .slide-badge{ display:none; }
+    .notes { @apply hidden; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .frag { transition: none !important; }
+    }
   }
 </style>
 </head>
@@ -280,7 +212,7 @@
     <div class="slide-inner">
       <div class="kicker">Empecemos con un caso real</div>
       <h1>El caso de TiendaExpress</h1>
-      <p class="body">TiendaExpress es una tienda en línea. Varios clientes se han quejado en redes sociales de que "a veces" las entregas tardan demasiado. La gerente pregunta: <strong>¿tenemos un problema real con los tiempos de entrega, o son solo quejas aisladas?</strong></p>
+      <p class="body-text">TiendaExpress es una tienda en línea. Varios clientes se han quejado en redes sociales de que "a veces" las entregas tardan demasiado. La gerente pregunta: <strong>¿tenemos un problema real con los tiempos de entrega?</strong></p>
       <p class="quote">Queremos responder esa pregunta con datos reales — y para eso, en esta sesión vamos a aprender, paso a paso, las herramientas que necesitamos.</p>
     </div>
     <div class="notes" data-time="2 min">
@@ -296,7 +228,7 @@
       <div class="kicker">Aquí están los datos</div>
       <h1>30 entregas de la última semana (minutos)</h1>
       <p class="caption">22, 25, 24, 23, 26, 24, 25, 23, 22, 60, 24, 26, 25, 23, 24, 25, 55, 24, 23, 26, 23, 24, 25, 26, 22, 24, 25, 23, 24, 26</p>
-      <p class="body" style="margin-top:1.4rem;">Por ahora, es solo una lista larga de números. Al final de esta sesión vamos a saber exactamente cómo leerla — y vamos a volver a este mismo caso para responder la pregunta de la gerente.</p>
+      <p class="body-text" style="margin-top:1.4rem;">Por ahora, es solo una lista larga de números. Al final de esta sesión vamos a saber exactamente cómo leerla — y vamos a volver a este mismo caso para responder la pregunta de la gerente.</p>
     </div>
     <div class="notes" data-time="2 min">
       <p>Dale un momento a que miren la lista cruda — es intencional que se vea abrumadora, ese es justo el problema que la estadística descriptiva resuelve.</p>
@@ -310,8 +242,13 @@
     <div class="slide-inner">
       <div class="kicker">Antes de los números</div>
       <h1>¿Qué es un análisis descriptivo?</h1>
-      <p class="quote">Resumir y describir QUÉ pasó en un conjunto de datos — con números, tablas y gráficos.</p>
-      <p class="body">Todavía no explica <strong>por qué</strong> pasó (eso es análisis diagnóstico) ni predice qué va a pasar (eso viene más adelante en la especialización). Hoy nos quedamos en el primer escalón: describir con precisión.</p>
+      <p class="quote frag">Resumir y describir QUÉ pasó en un conjunto de datos — con números, tablas y gráficos.</p>
+      <div class="trio frag">
+        <div class="item"><span class="e">🔢</span><span class="l">Números</span></div>
+        <div class="item"><span class="e">📋</span><span class="l">Tablas</span></div>
+        <div class="item"><span class="e">📈</span><span class="l">Gráficos</span></div>
+      </div>
+      <p class="body-text frag">Todavía no explica <strong>por qué</strong> pasó (eso es análisis diagnóstico) ni predice qué va a pasar (eso viene más adelante en la especialización). Hoy nos quedamos en el primer escalón: describir con precisión.</p>
     </div>
     <div class="notes" data-time="3 min">
       <p>Aclara la diferencia con diagnóstico/predictivo sin entrar en detalle — solo ubicar mentalmente dónde estamos parados.</p>
@@ -330,7 +267,7 @@
         <div class="item"><span class="e">💬</span><span class="l">Comunicar</span></div>
         <div class="item"><span class="e">✅</span><span class="l">Decidir</span></div>
       </div>
-      <p class="body">Convertir un montón de datos sueltos en una idea clara, que se pueda contar y que ayude a tomar una decisión — sin importar el sector: salud, retail, finanzas, deporte…</p>
+      <p class="body-text">Convertir un montón de datos sueltos en una idea clara, que se pueda contar y que ayude a tomar una decisión — sin importar el sector: salud, retail, finanzas, deporte…</p>
     </div>
     <div class="notes" data-time="2 min">
       <p>Callback rápido a la presentación de motivación — no repitas toda la grilla de sectores, solo menciónala de pasada.</p>
@@ -345,8 +282,8 @@
     <div class="slide-inner">
       <div class="kicker">Antes de seguir</div>
       <h1>¿Qué es un dato?</h1>
-      <p class="quote">Un dato es un valor u observación sobre algo: una edad, un precio, una respuesta, una fecha…</p>
-      <p class="body">Cuando reunimos muchos datos sobre lo mismo, tenemos una <strong>variable</strong>. Por ejemplo: "edad de los clientes" es la variable; 34, 28, 45, 51… son los datos (los valores) de esa variable.</p>
+      <p class="quote frag">Un dato es un valor u observación sobre algo: una edad, un precio, una respuesta, una fecha…</p>
+      <p class="body-text frag">Cuando reunimos muchos datos sobre lo mismo, tenemos una <strong>variable</strong>. Por ejemplo: "edad de los clientes" es la variable; 34, 28, 45, 51… son los datos (los valores) de esa variable.</p>
     </div>
     <div class="notes" data-time="2 min">
       <p>Mantén el ejemplo simple y cotidiano.</p>
@@ -365,7 +302,7 @@
         <li><strong>Cuantitativos discretos:</strong> se cuentan, son números enteros — número de hijos, número de pedidos.</li>
         <li><strong>Cuantitativos continuos:</strong> se miden, pueden tener decimales — estatura, tiempo, dinero.</li>
       </ul>
-      <p class="body" style="margin-top:1rem;">¿Por qué importa? Porque el tipo de dato define qué medida tiene sentido usar — ya lo vamos a ver.</p>
+      <p class="body-text" style="margin-top:1rem;">¿Por qué importa? Porque el tipo de dato define qué medida tiene sentido usar — ya lo vamos a ver.</p>
     </div>
     <div class="notes" data-time="2 min">
       <p>Conecta hacia adelante sin resolverlo todavía: "la Moda va a ser la única de las tres medidas que sirve para datos cualitativos — en un momento vemos por qué".</p>
@@ -378,7 +315,7 @@
     <div class="slide-inner">
       <div class="kicker">Antes de calcular nada</div>
       <h1>¿Cómo se puede "comportar" un dato?</h1>
-      <p class="body">Antes de resumir un grupo de datos en un solo número, vale la pena mirar cómo se distribuyen sus valores — no todos los conjuntos de datos se comportan igual.</p>
+      <p class="body-text">Antes de resumir un grupo de datos en un solo número, vale la pena mirar cómo se distribuyen sus valores — no todos los conjuntos de datos se comportan igual.</p>
       <div class="hist-row">
         <div class="hist">
           <div class="hist-bars">
@@ -412,7 +349,7 @@
     <div class="slide-inner">
       <div class="kicker">Medidas de tendencia central</div>
       <h1>¿Cuál es el valor típico de este grupo?</h1>
-      <p class="body">Tres formas distintas de responder la misma pregunta — y no siempre dan la misma respuesta.</p>
+      <p class="body-text">Tres formas distintas de responder la misma pregunta — y no siempre dan la misma respuesta.</p>
       <ul class="points">
         <li>La <strong>Media</strong> — el promedio que ya conocen de Excel.</li>
         <li>La <strong>Mediana</strong> — el valor que queda justo en la mitad.</li>
@@ -430,7 +367,7 @@
     <div class="slide-inner">
       <div class="kicker">Medida 1 de 3</div>
       <h1>Media (promedio)</h1>
-      <p class="body">Sumar todos los valores y dividir entre cuántos son. Es el "punto de equilibrio" del grupo.</p>
+      <p class="body-text">Sumar todos los valores y dividir entre cuántos son. Es el "punto de equilibrio" del grupo.</p>
       <div class="formula">Media = (x₁ + x₂ + … + xₙ) / n</div>
       <p class="caption">Ejemplo — salarios mensuales de un equipo pequeño, en millones de pesos: <strong>2, 2, 3, 3, 3, 4, 4, 25</strong><br>Media = 46 / 8 = <strong>5.75</strong></p>
     </div>
@@ -445,8 +382,9 @@
     <div class="slide-badge">🚨</div>
     <div class="slide-inner">
       <div class="kicker">Cuidado aquí</div>
-      <h1>El problema de la media: los valores atípicos</h1>
-      <div class="numline-wrap">
+      <h1>¿Cuál es la "enfermedad" de la media?</h1>
+      <p class="caption" style="margin-top:0;">(En este curso, "media" y "promedio" son el mismo concepto — dos nombres para lo mismo.)</p>
+      <div class="numline-wrap frag">
         <div class="numline">
           <div class="track"></div>
           <div class="dot" style="left:7.7%"></div>
@@ -463,10 +401,11 @@
           </div>
         </div>
       </div>
-      <p class="caption">Valores: 2, 2, 3, 3, 3, 4, 4, <strong>25</strong>. Un solo valor extremo infla la media muy por encima de lo que gana la mayoría del equipo (entre 2 y 4).</p>
+      <p class="caption frag">Valores: 2, 2, 3, 3, 3, 4, 4, <strong>25</strong>. Un solo valor extremo infla la media muy por encima de lo que gana la mayoría del equipo (entre 2 y 4).</p>
     </div>
     <div class="notes" data-time="3 min">
       <p>Este es el momento "aha" de la sesión — insiste en que la media puede engañar cuando hay valores atípicos.</p>
+      <p>Aclara explícitamente que "media" y "promedio" son sinónimos — en el curso usamos ambos términos indistintamente, pero en las noticias/reportes casi siempre se dice "promedio".</p>
       <p class="line">«Un número sin contexto también puede engañar — igual que confiar en una respuesta de un LLM sin verificarla.»</p>
     </div>
   </section>
@@ -475,10 +414,10 @@
   <section class="slide">
     <div class="slide-badge">📌</div>
     <div class="slide-inner">
-      <div class="kicker">Medida 2 de 3</div>
+      <div class="kicker">Medida 2 de 3 · La solución al problema anterior</div>
       <h1>Mediana: el valor de la mitad</h1>
-      <p class="body">Se ordenan todos los valores de menor a mayor y se toma el del medio (o el promedio de los dos del medio, si son pares).</p>
-      <div class="numline-wrap">
+      <p class="body-text">¿Cuál es la solución para los valores atípicos que acabamos de ver? Se ordenan todos los valores de menor a mayor y se toma el del medio (o el promedio de los dos del medio, si son pares).</p>
+      <div class="numline-wrap frag">
         <div class="numline">
           <div class="track"></div>
           <div class="dot" style="left:7.7%"></div>
@@ -499,10 +438,14 @@
           </div>
         </div>
       </div>
-      <p class="caption">Mediana = <strong>3</strong> → mucho más representativa del salario "típico" del equipo que la media (5.75).</p>
+      <div class="predict-row" data-predict-group>
+        <button type="button" class="predict-btn" data-correct="false">La Media (5.75)</button>
+        <button type="button" class="predict-btn" data-correct="true">La Mediana (3)</button>
+      </div>
+      <p class="caption predict-feedback">Mediana = <strong>3</strong> → mucho más representativa del salario "típico" del equipo que la media (5.75).</p>
     </div>
     <div class="notes" data-time="3 min">
-      <p>Aquí se nota la diferencia visualmente en la recta numérica — deja que la miren un momento.</p>
+      <p>Aquí se nota la diferencia visualmente en la recta numérica — deja que la miren un momento. Antes de revelar, pregúntales cuál creen que representa mejor el salario típico (botones en pantalla) y deja que voten antes de hacer clic.</p>
       <p class="line">«Por esto en las noticias casi siempre hablan de "salario mediano", no "salario promedio" — ya saben por qué.»</p>
     </div>
   </section>
@@ -513,9 +456,9 @@
     <div class="slide-inner">
       <div class="kicker">Medida 3 de 3</div>
       <h1>Moda: el valor que más se repite</h1>
-      <p class="body">Ejemplo — respuestas de una encuesta de satisfacción (1 a 5 estrellas):</p>
-      <p class="caption"><strong>3, 4, 5, 5, 5, 4, 2, 5, 4, 3</strong> → Moda = <strong>5</strong> (se repite 4 veces)</p>
-      <p class="body" style="margin-top:1rem;">Puede haber más de una moda (bimodal), o ninguna si todos los valores son distintos. Es la única de las tres que también sirve para datos <strong>categóricos</strong> (no numéricos).</p>
+      <p class="body-text frag">Ejemplo — respuestas de una encuesta de satisfacción (1 a 5 estrellas):</p>
+      <p class="caption frag"><strong>3, 4, 5, 5, 5, 4, 2, 5, 4, 3</strong> → Moda = <strong>5</strong> (se repite 4 veces)</p>
+      <p class="body-text frag" style="margin-top:1rem;">Puede haber más de una moda (bimodal), o ninguna si todos los valores son distintos. Es la única de las tres que también sirve para datos <strong>categóricos</strong> (no numéricos).</p>
     </div>
     <div class="notes" data-time="2 min">
       <p>Ejemplo de dato categórico sin media/mediana con sentido: "el color de carro más vendido" — ahí solo la moda tiene sentido.</p>
@@ -545,7 +488,7 @@
     <div class="slide-inner">
       <div class="kicker">Pero falta algo</div>
       <h1>Un solo número no basta</h1>
-      <p class="body">Dos grupos pueden tener <strong>exactamente el mismo promedio</strong>… y comportarse de forma totalmente distinta.</p>
+      <p class="body-text">Dos grupos pueden tener <strong>exactamente el mismo promedio</strong>… y comportarse de forma totalmente distinta.</p>
       <div class="dual-numline">
         <div class="group">
           <div class="row-label">Grupo A: 4, 5, 5, 5, 6 (Media = 5)</div>
@@ -585,9 +528,9 @@
     <div class="slide-inner">
       <div class="kicker">Medidas de dispersión</div>
       <h1>Varianza: qué tan lejos están los datos del centro</h1>
-      <p class="body">Se mide qué tan lejos está, en promedio, cada dato respecto a la media — elevado al cuadrado para que las distancias negativas y positivas no se cancelen entre sí.</p>
-      <div class="formula">Varianza = promedio de (x − Media)²</div>
-      <p class="caption">Grupo A (4,5,5,5,6) → Varianza = <strong>0.4</strong> &nbsp;·&nbsp; Grupo B (1,3,5,7,9) → Varianza = <strong>8</strong></p>
+      <p class="body-text frag">Se mide qué tan lejos está, en promedio, cada dato respecto a la media — elevado al cuadrado para que las distancias negativas y positivas no se cancelen entre sí.</p>
+      <div class="formula frag">Varianza = promedio de (x − Media)²</div>
+      <p class="caption frag">Grupo A (4,5,5,5,6) → Varianza = <strong>0.4</strong> &nbsp;·&nbsp; Grupo B (1,3,5,7,9) → Varianza = <strong>8</strong></p>
     </div>
     <div class="notes" data-time="3 min">
       <p>No te enredes con la fórmula en el tablero — el punto conceptual importa más que memorizar el cálculo (lo van a hacer en Python en un momento).</p>
@@ -601,9 +544,9 @@
     <div class="slide-inner">
       <div class="kicker">La versión práctica</div>
       <h1>Desviación estándar: la varianza, en las unidades originales</h1>
-      <p class="body">Es la raíz cuadrada de la varianza — nos devuelve a las unidades reales del dato (pesos, grados, minutos…), mucho más fácil de interpretar que la varianza al cuadrado.</p>
-      <div class="formula">Desviación estándar = √Varianza</div>
-      <p class="caption">Grupo A → Desviación estándar = <strong>0.63</strong> &nbsp;·&nbsp; Grupo B → Desviación estándar = <strong>2.83</strong></p>
+      <p class="body-text frag">Es la raíz cuadrada de la varianza — nos devuelve a las unidades reales del dato (pesos, grados, minutos…), mucho más fácil de interpretar que la varianza al cuadrado.</p>
+      <div class="formula frag">Desviación estándar = √Varianza</div>
+      <p class="caption frag">Grupo A → Desviación estándar = <strong>0.63</strong> &nbsp;·&nbsp; Grupo B → Desviación estándar = <strong>2.83</strong></p>
     </div>
     <div class="notes" data-time="3 min">
       <p class="line">«Si les dicen que un domicilio tarda en promedio 30 minutos con una desviación de 2 minutos, confían mucho más que si la desviación fuera de 20 minutos — mismo promedio, confianza muy distinta.»</p>
@@ -611,6 +554,32 @@
   </section>
 
   <!-- 18 -->
+  <section class="slide">
+    <div class="slide-badge">⚖️</div>
+    <div class="slide-inner">
+      <div class="kicker">Una pregunta más</div>
+      <h1>Una desviación… ¿es mucha o poca?</h1>
+      <p class="body-text">No se puede saber mirándola sola — depende de la escala del dato. El <strong>coeficiente de variación</strong> compara la desviación con la media, para poder comparar la dispersión entre variables distintas.</p>
+      <div class="formula">CV = (Desviación estándar / Media) × 100%</div>
+      <div class="predict-row" data-predict-group>
+        <button type="button" class="predict-btn" data-correct="false">Altura (media 170 cm, desv. 5 cm)</button>
+        <button type="button" class="predict-btn" data-correct="true">Peso (media 70 kg, desv. 5 kg)</button>
+      </div>
+      <p class="caption predict-feedback">Altura: media 170 cm, desviación 5 cm → CV ≈ <strong>2.9%</strong> &nbsp;·&nbsp; Peso: media 70 kg, desviación 5 kg → CV ≈ <strong>7.1%</strong><br>Misma desviación (5), pero el peso es proporcionalmente mucho más disperso.</p>
+      <ul class="points check" style="margin-top:1.2rem;">
+        <li>CV &lt; 15% → datos poco dispersos (homogéneos)</li>
+        <li>CV 15–30% → dispersión moderada</li>
+        <li>CV &gt; 30% → datos muy dispersos (heterogéneos)</li>
+      </ul>
+    </div>
+    <div class="notes" data-time="3 min">
+      <p>Aclara que estos umbrales (15% / 30%) son una regla de dedo, no una ley — varían según el campo y el tipo de dato. Antes de revelar, pregunta cuál de las dos variables creen que está proporcionalmente más dispersa (botones en pantalla).</p>
+      <p>El ejemplo de altura/peso es clave: mismo número de desviación (5), pero el CV muestra que no significan lo mismo — no se puede comparar dispersión "en crudo" entre variables con escalas distintas.</p>
+      <p class="line">«No sirve de nada decir 'la desviación es 5' sin decir 5 de qué, comparado con qué. El CV pone esa desviación en contexto.»</p>
+    </div>
+  </section>
+
+  <!-- 19 -->
   <section class="slide">
     <div class="slide-badge">🧩</div>
     <div class="slide-inner">
@@ -627,13 +596,13 @@
     </div>
   </section>
 
-  <!-- 19 -->
+  <!-- 20 -->
   <section class="slide">
     <div class="slide-badge">🔄</div>
     <div class="slide-inner">
       <div class="kicker">Volvamos a TiendaExpress</div>
       <h1>Calculemos las medidas, con las herramientas de hoy</h1>
-      <p class="body">¿Se acuerdan de los 30 tiempos de entrega que vimos al inicio? Con lo que aprendimos hoy, ya podemos leerlos de verdad.</p>
+      <p class="body-text">¿Se acuerdan de los 30 tiempos de entrega que vimos al inicio? Con lo que aprendimos hoy, ya podemos leerlos de verdad.</p>
       <ul class="points check" style="margin-top:1.4rem;">
         <li>Media = <strong>26.37</strong> minutos</li>
         <li>Mediana = <strong>24</strong> minutos</li>
@@ -646,7 +615,7 @@
     </div>
   </section>
 
-  <!-- 20 -->
+  <!-- 21 -->
   <section class="slide">
     <div class="slide-badge">📉</div>
     <div class="slide-inner">
@@ -680,7 +649,7 @@
     </div>
   </section>
 
-  <!-- 21 -->
+  <!-- 22 -->
   <section class="slide">
     <div class="slide-badge">🔵</div>
     <div class="slide-inner">
@@ -741,15 +710,15 @@
     </div>
   </section>
 
-  <!-- 22 -->
+  <!-- 23 -->
   <section class="slide">
     <div class="slide-badge">🕵️</div>
     <div class="slide-inner">
       <div class="kicker">Uniendo todo</div>
       <h1>¿Tenemos un problema real?</h1>
-      <p class="caption">Varianza ≈ <strong>71.10</strong> · Desviación estándar ≈ <strong>8.43 minutos</strong> — casi un tercio del tiempo promedio.</p>
+      <p class="caption">Varianza ≈ <strong>71.10</strong> · Desviación estándar ≈ <strong>8.43 minutos</strong> · CV = 8.43 / 26.37 ≈ <strong>32%</strong> — casi un tercio del tiempo promedio, dispersión alta.</p>
       <p class="quote">Sí: aunque el tiempo típico es bueno (24 minutos), la inconsistencia es real — algunas entregas tardan más del doble. Eso explica las quejas, aunque "en promedio" todo se vea bien.</p>
-      <p class="body">Esto es análisis <strong>descriptivo</strong>: describimos QUÉ está pasando. Todavía no sabemos POR QUÉ se disparan esas 2 entregas (eso es diagnóstico) ni podemos predecir cuál pedido va a tardar (eso es clasificación/ML) — ambos vienen más adelante en la especialización.</p>
+      <p class="body-text">Esto es análisis <strong>descriptivo</strong>: describimos QUÉ está pasando. Todavía no sabemos POR QUÉ se disparan esas 2 entregas (eso es diagnóstico) ni podemos predecir cuál pedido va a tardar (eso es clasificación/ML) — ambos vienen más adelante en la especialización.</p>
     </div>
     <div class="notes" data-time="3 min">
       <p>Cierra el ejercicio completo devolviendo la respuesta a la pregunta de negocio planteada al inicio, en "El caso de TiendaExpress".</p>
@@ -757,14 +726,14 @@
     </div>
   </section>
 
-  <!-- 23 -->
+  <!-- 24 -->
   <section class="slide">
     <div class="slide-badge">🚀</div>
     <div class="slide-inner">
       <div class="kicker">A la práctica</div>
       <h1>Ahora sí: a calcularlo con Python</h1>
       <p class="quote">Una cosa es entender qué significa un promedio. Otra es saber calcularlo — y sobre todo, saber cuándo NO confiar en él.</p>
-      <p class="body">Vamos al notebook a calcular todo esto con datos reales.</p>
+      <p class="body-text">Vamos al notebook a calcular todo esto con datos reales.</p>
     </div>
     <div class="notes" data-time="2 min">
       <p>Transición directa a la actividad práctica en Jupyter del cronograma del día.</p>
@@ -798,7 +767,7 @@
 
 <div id="footer">
   <span class="course">Introducción a la Ciencia de Datos · Sesión 1 · Análisis Descriptivo</span>
-  <span id="counter" class="hint">1 / 23</span>
+  <span id="counter" class="hint">1 / 24</span>
   <span class="hint">→ / espacio: siguiente / revela viñeta · ←: anterior · N: notas · C: comentarios · F: pantalla completa</span>
 </div>
 
@@ -878,7 +847,7 @@
     const target = Math.max(0, Math.min(total - 1, i));
     const dir = target < current ? 'backward' : 'forward';
     current = target;
-    slides.forEach((s, idx) => s.classList.toggle('active', idx === current));
+    slides.forEach((s, idx) => s.classList.toggle('is-active', idx === current));
     progress.style.width = (((current + 1) / total) * 100) + '%';
     counter.textContent = (current + 1) + ' / ' + total;
     setupFragments(dir);
@@ -966,6 +935,25 @@
       document.exitFullscreen().catch(()=>{});
     }
   }
+
+  function setupPredictRows(){
+    document.querySelectorAll('[data-predict-group]').forEach(row => {
+      const feedback = row.parentElement.querySelector('.predict-feedback');
+      row.querySelectorAll('.predict-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (row.dataset.answered) return;
+          row.dataset.answered = '1';
+          row.querySelectorAll('.predict-btn').forEach(b => {
+            if (b.dataset.correct === 'true') b.classList.add('correct');
+            else if (b === btn) b.classList.add('incorrect');
+            else b.classList.add('dim');
+          });
+          if (feedback) feedback.classList.add('shown');
+        });
+      });
+    });
+  }
+  setupPredictRows();
 
   document.getElementById('prevZone').addEventListener('click', prev);
   document.getElementById('nextZone').addEventListener('click', next);
