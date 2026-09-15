@@ -1,6 +1,6 @@
 # Kahoot de repaso — Sesión 1
 
-Kahoot **no evaluable**, pensado para los primeros ~10 minutos de la Sesión 2, repasando los conceptos de la Sesión 1 (motivación, fundamentos de Python y análisis descriptivo). 15 preguntas de opción múltiple, tono cálido y sin trampas — el objetivo es repasar, no reprobar a nadie.
+Kahoot **no evaluable**, pensado para los primeros ~10 minutos de la Sesión 2, repasando los conceptos de la Sesión 1 (motivación, estructuras de datos nativas de Python y análisis descriptivo). 16 preguntas de opción múltiple, tono cálido y sin trampas — el objetivo es repasar, no reprobar a nadie.
 
 Cada pregunta incluye las 4 opciones (✅ marca la correcta) y una línea de **"Por qué"** para que el profesor la lea en voz alta apenas Kahoot muestre el resultado, reforzando el concepto en el momento.
 
@@ -34,15 +34,15 @@ D. Tener siempre la última versión de cada IA
 
 ---
 
-## Bloque 2 · Fundamentos de Python (4 preguntas)
+## Bloque 2 · Estructuras de datos nativas de Python (4 preguntas)
 
-**4. En Python, si escribes `nota = 4.5`, ¿qué tipo de dato es `nota`?**
-A. `str`
-B. `bool`
-C. ✅ `float`
-D. `int`
+**4. Tienes `nota_texto = "4.5"` y necesitas sumarla a otras notas. ¿Qué debes hacer antes de poder sumarla?**
+A. Usar `.strip()` para limpiar espacios
+B. ✅ Convertirla con `float()` — está guardada como texto (`str`), no como número
+C. Nada, Python la suma automáticamente
+D. Usar `type()` para arreglarla
 
-*Por qué:* los números con decimales son de tipo `float`; los números enteros son `int`. Python detecta el tipo solo, no hay que avisarle.
+*Por qué:* los datos reales casi nunca llegan en el tipo que necesitas — hay que convertir explícitamente con `int()`/`float()`/`str()` (casting) antes de operar con ellos. Es, casi siempre, el primer error que se depura al trabajar con datos reales.
 
 **5. Tienes `nombre_sucio = "  ana gomez  "`. ¿Qué método usarías para quitar los espacios sobrantes al inicio y al final?**
 A. `.upper()`
@@ -52,25 +52,25 @@ D. `.replace()`
 
 *Por qué:* `.strip()` elimina espacios en blanco al principio y al final del texto — algo que vamos a necesitar constantemente para limpiar datos reales (¡la próxima sesión ya lo usamos con Pandas!).
 
-**6. ¿Cuál es la diferencia principal entre una lista y un diccionario en Python?**
-A. No hay ninguna diferencia real
-B. Las listas solo guardan números; los diccionarios solo texto
-C. ✅ En la lista se accede por posición (0, 1, 2…); en el diccionario se accede por una llave/etiqueta
-D. Los diccionarios no pueden guardar más de un valor
+**6. Dada `notas = [3.5, 4.0, 2.8, 5.0, 4.2]`, si recorres la lista con un `for` y cuentas cuántas notas son mayores o iguales a 3.0, ¿cuántas cuentas?**
+A. 5
+B. ✅ 4
+C. 3
+D. 2
 
-*Por qué:* la lista es una secuencia ordenada por posición; el diccionario asocia cada valor con un nombre ("llave"), como `{"nombre": "Ana"}`.
+*Por qué:* solo 2.8 queda por debajo de 3.0 — las otras cuatro (3.5, 4.0, 5.0, 4.2) sí cumplen la condición. Este patrón de `for` + `if` para filtrar y contar es la base de casi todo el análisis exploratorio.
 
-**7. Dada la lista `notas = [3.5, 4.0, 2.8, 5.0, 4.2]`, ¿qué usarías para saber cuántos elementos tiene?**
-A. `sum(notas)`
-B. `type(notas)`
-C. ✅ `len(notas)`
-D. `max(notas)`
+**7. Tienes `estudiante = {"nombre": "Ana", "nota": 4.5}`. ¿Cómo accedes al valor de la nota?**
+A. `estudiante[1]`
+B. `estudiante.nota`
+C. ✅ `estudiante["nota"]`
+D. `estudiante(nota)`
 
-*Por qué:* `len()` cuenta los elementos de la lista; `sum()` los suma; `max()`/`min()` dan el mayor y el menor valor.
+*Por qué:* a diferencia de una lista (donde se accede por posición: 0, 1, 2…), en un diccionario se accede por la llave/etiqueta — `estudiante["nota"]`, sin importar el orden en que se guardó.
 
 ---
 
-## Bloque 3 · Análisis descriptivo (8 preguntas)
+## Bloque 3 · Análisis descriptivo (9 preguntas)
 
 **8. ¿Cuál es la diferencia entre un análisis descriptivo y uno diagnóstico?**
 A. Son exactamente lo mismo
@@ -128,7 +128,15 @@ D. Cuántos datos hay en total
 
 *Por qué:* dos grupos pueden tener exactamente la misma media y comportarse muy distinto — la desviación estándar dice qué tan "parejo" o disperso es cada grupo.
 
-**15. En el caso de TiendaExpress (30 tiempos de entrega), la media fue 26.37 min y la desviación estándar 8.43 min. ¿Qué significa esto?**
+**15. Una desviación estándar de 5 puede ser "poca" o "mucha" según el caso: altura (media 170 cm) vs. peso (media 70 kg). ¿Qué mide el Coeficiente de Variación (CV) que la desviación estándar sola no muestra?**
+A. Nada nuevo, es lo mismo que la desviación estándar
+B. ✅ Qué tan grande es la dispersión *en relación con* la media — permite comparar variables de escalas distintas
+C. El valor máximo del conjunto de datos
+D. Si los datos son categóricos o numéricos
+
+*Por qué:* CV = (Desviación estándar / Media) × 100%. Con la misma desviación (5), el CV de la altura es ≈2.9% (poco disperso) y el del peso ≈7.1% (más disperso) — la desviación sola no distinguía eso.
+
+**16. En el caso de TiendaExpress (30 tiempos de entrega), la media fue 26.37 min y la desviación estándar 8.43 min. ¿Qué significa esto?**
 A. Que todas las entregas tardan exactamente 26.37 minutos
 B. ✅ Que hay bastante inconsistencia: el tiempo típico es bueno, pero algunas entregas se disparan muy por encima del promedio
 C. Que el negocio no tiene ningún problema

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesión 2 · Métodos de Pandas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bg: '#0F172A',
+          card: '#1B2336',
+          muted: '#272F42',
+          mutedfg: '#94A3B8',
+          fg: '#F8FAFC',
+          edge: '#475569',
+          accent: '#22C55E',
+          amber: '#F59E0B',
+          danger: '#EF4444',
+        },
+        fontFamily: {
+          sans: ['"IBM Plex Sans"', 'sans-serif'],
+          mono: ['"IBM Plex Mono"', 'monospace'],
+        },
+      }
+    }
+  }
+</script>
+<style type="text/tailwindcss">
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:#0F172A; color:#F8FAFC;
+    font-family:'IBM Plex Sans',sans-serif;
+    overflow:hidden;
+  }
+  #deck{ position:relative; width:100vw; height:100vh; }
+  .slide{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; justify-content:center; align-items:center;
+    padding: 6vh 8vw 9vh 8vw;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(34,197,94,0.10), transparent 60%),
+      radial-gradient(1000px 700px at 100% 110%, rgba(245,158,11,0.10), transparent 55%),
+      #0F172A;
+  }
+  .slide.active{ display:flex; }
+  .slide-inner{ @apply max-w-[1150px] w-full; }
+  .slide-badge{
+    @apply absolute w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-card/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-3xl sm:text-4xl shadow-2xl;
+    top: 6vh; right: 6vw; z-index: 2;
+  }
+  .kicker{ @apply inline-flex items-center gap-2 uppercase tracking-widest text-xs sm:text-sm font-bold text-accent mb-4 before:content-[''] before:w-6 before:h-0.5 before:bg-accent; }
+  h1{ @apply text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight mb-4; }
+  h1 em{ @apply text-amber not-italic; }
+  .subtitle{ @apply text-lg sm:text-xl text-mutedfg max-w-[52ch] -mt-1 mb-2; }
+  .body{ @apply text-lg sm:text-xl leading-relaxed; }
+  .body p{ @apply mb-4; }
+  ul.points{ @apply list-none m-0 p-0 flex flex-col gap-3; }
+  ul.points li{ @apply text-lg sm:text-xl leading-relaxed pl-8 relative before:content-['→'] before:absolute before:left-0 before:top-0 before:text-accent before:font-bold; }
+  ul.points.check li{ @apply before:content-['✓']; }
+  .frag{ opacity:0; transform:translateY(10px); transition:opacity .4s ease, transform .4s ease; }
+  .frag.shown{ opacity:1; transform:translateY(0); }
+  @media (prefers-reduced-motion: reduce){ .frag{ transition:none; } }
+  :focus-visible{ outline:2px solid #22C55E; outline-offset:2px; }
+
+  .quote{ @apply text-2xl sm:text-3xl font-bold leading-snug border-l-4 border-amber pl-5 my-6; }
+  .caption{ @apply text-sm sm:text-base text-mutedfg mt-4; }
+  .caption strong{ @apply text-fg; }
+
+  /* Bloque de código */
+  .code{
+    background:#0b0e1a; border:1px solid #475569; border-radius:12px;
+    padding:1.1rem 1.3rem; font-family:'IBM Plex Mono',monospace;
+    font-size: clamp(0.78rem, 1.15vw, 1rem); color:#F8FAFC; line-height:1.6;
+    overflow-x:auto; text-align:left; margin: 1.2rem 0; white-space:pre;
+  }
+  .code .k{ color:#22C55E; }
+  .code .s{ color:#F59E0B; }
+  .code .c{ color:#94A3B8; }
+  .code .o{ color:#FCA5A5; }
+
+  /* Cuatro comandos (grid) */
+  .cmd-grid{ @apply grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5; }
+  .cmd-card{ @apply bg-card/60 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-4; }
+  .cmd-card code{ @apply font-mono text-amber text-lg; }
+  .cmd-card p{ @apply m-0 mt-1 text-base text-mutedfg leading-relaxed; }
+
+  /* Predicción antes de revelar */
+  .predict-row{ @apply flex flex-wrap gap-3 mt-5; }
+  .predict-btn{ @apply flex-1 basis-48 min-h-[44px] text-center bg-card/60 backdrop-blur-md border border-white/10 rounded-2xl font-bold text-fg cursor-pointer transition px-5 py-3; }
+  .predict-btn:hover{ @apply border-accent/60 bg-white/10; }
+  .predict-btn.correct{ @apply border-accent ring-1 ring-accent bg-accent/10; }
+  .predict-btn.incorrect{ @apply border-amber/60 bg-amber/10; }
+  .predict-btn.dim{ @apply opacity-50; }
+  .predict-feedback{ @apply hidden; margin-top: 1rem; }
+  .predict-feedback.shown{ @apply block; }
+
+  /* Checklist de métodos ya vistos */
+  .method-check{ @apply flex items-center gap-3 bg-card/60 backdrop-blur-md border border-white/10 rounded-xl px-4 py-3 cursor-pointer transition-colors hover:border-accent/60 min-h-[44px]; }
+  .method-check input{ @apply peer sr-only; }
+  .method-box{ @apply w-5 h-5 flex-none rounded-md border-2 border-edge peer-checked:bg-accent peer-checked:border-accent flex items-center justify-center text-bg text-sm font-bold; }
+  .method-check input:checked ~ .method-box::after{ content:'✓'; }
+
+  #progress{ position:fixed; top:0; left:0; height:4px; background:linear-gradient(90deg,#22C55E,#F59E0B); width:0%; z-index:50; transition:width .25s ease; }
+  #footer{ position:fixed; bottom:0; left:0; right:0; height:6vh; min-height:42px; display:flex; align-items:center; justify-content:space-between; padding:0 1.6rem; font-size:.8rem; color:#94A3B8; background:linear-gradient(180deg,transparent,rgba(0,0,0,0.35)); z-index:40; }
+  #footer .course{ opacity:.85; }
+  #footer .hint{ opacity:.6; }
+  #counter{ font-variant-numeric: tabular-nums; }
+
+  .navzone{ position:fixed; top:0; bottom:0; width:64px; z-index:45; background:transparent; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#94A3B8; opacity:0; transition:opacity .15s ease; font-size:1.6rem; }
+  .navzone:hover{ opacity:1; }
+  #prevZone{ left:0; }
+  #nextZone{ right:0; }
+
+  #toolbar{ position:fixed; bottom:6vh; left:1.2rem; z-index:46; display:flex; gap:.6rem; flex-wrap:wrap; }
+  #notesToggle, #commentsToggle{ background:#1B2336; border:1px solid #475569; color:#F8FAFC; border-radius:999px; padding:.4rem .9rem; font-size:.8rem; cursor:pointer; min-height:44px; }
+  #notesToggle.active{ background:#22C55E; color:#0F172A; border-color:#22C55E; font-weight:700; }
+  #commentsToggle.active{ background:#F59E0B; color:#0F172A; border-color:#F59E0B; font-weight:700; }
+
+  #notesPanel, #commentsPanel{ position:fixed; left:0; right:0; bottom:0; max-height:42vh; overflow-y:auto; background:rgba(8,11,24,0.97); padding:1.4rem 2.2rem 1.6rem 2.2rem; transform:translateY(100%); transition:transform .25s ease; z-index:44; }
+  #notesPanel{ border-top:2px solid #22C55E; }
+  #commentsPanel{ border-top:2px solid #F59E0B; }
+  #notesPanel.open, #commentsPanel.open{ transform:translateY(0); }
+  #notesPanel h4, #commentsPanel h4{ margin:0 0 .6rem 0; color:#22C55E; font-size:.95rem; text-transform:uppercase; letter-spacing:.08em; }
+  #commentsPanel h4{ color:#F59E0B; }
+  #notesPanel .time{ color:#F59E0B; font-weight:700; }
+  #notesPanel ul{ margin:.3rem 0 .8rem 1.1rem; padding:0; }
+  #notesPanel li{ margin-bottom:.35rem; line-height:1.45; font-size:.95rem; }
+  #notesPanel p{ line-height:1.5; font-size:.95rem; margin:0 0 .6rem 0; }
+  #notesPanel .line{ color:#94A3B8; font-style:italic; }
+
+  #commentsText{ width:100%; min-height:110px; resize:vertical; background:#0b0e1a; color:#F8FAFC; border:1px solid #475569; border-radius:10px; padding:.8rem .9rem; font-size:.95rem; font-family:inherit; line-height:1.5; }
+  #commentsText:focus{ outline:none; border-color:#F59E0B; }
+  .comments-actions{ display:flex; align-items:center; gap:.7rem; margin-top:.7rem; flex-wrap:wrap; }
+  .comments-actions button{ background:#1B2336; border:1px solid #475569; color:#F8FAFC; border-radius:999px; padding:.4rem .9rem; font-size:.8rem; cursor:pointer; min-height:44px; }
+  .comments-actions button:hover{ border-color:#F59E0B; }
+  .comments-actions .hint{ font-size:.8rem; color:#94A3B8; }
+
+  .notes{ display:none; }
+
+  @media (max-width:820px){
+    .slide-badge{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<div id="deck">
+
+  <!-- 1 -->
+  <section class="slide">
+    <div class="slide-badge">🧰</div>
+    <div class="slide-inner">
+      <div class="kicker">Antes de abrir el notebook</div>
+      <h1>Los métodos que vamos a usar <em>hoy</em></h1>
+      <p class="subtitle">Ya vieron qué es Pandas y por qué es rápido. Ahora, un mapa rápido de los comandos exactos que van a escribir en los dos notebooks de hoy — para que nada se sienta nuevo cuando lo vean ahí.</p>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p>Transición desde el deck de Big O: «ya saben por qué Pandas es rápido — ahora, exactamente qué van a teclear para usarlo».</p>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide">
+    <div class="slide-badge">📥</div>
+    <div class="slide-inner">
+      <div class="kicker">Paso 1 · Cargar</div>
+      <h1><code class="font-mono text-amber">pd.read_csv()</code></h1>
+      <p class="body">Lee un archivo CSV y lo convierte en un <strong>DataFrame</strong> — el objeto principal de Pandas, una tabla con filas y columnas, como una hoja de Excel pero programable.</p>
+      <pre class="code"><span class="k">import</span> pandas <span class="k">as</span> pd
+
+<span class="k">df</span> = pd.read_csv(<span class="s">'raw/AB_NYC_2019.csv'</span>)
+<span class="k">df</span>.head()</pre>
+      <p class="caption">Este es exactamente el dataset que van a usar hoy: <strong>Airbnb NYC 2019</strong>, 48.895 anuncios.</p>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p>Recuerda que ya descargaron el CSV antes de la sesión — si alguien no lo tiene, dale el link de Kaggle otra vez.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide">
+    <div class="slide-badge">🔍</div>
+    <div class="slide-inner">
+      <div class="kicker">Paso 2 · Conocer los datos</div>
+      <h1>Cuatro comandos que van a usar constantemente</h1>
+      <div class="cmd-grid">
+        <div class="cmd-card frag"><code>.shape</code><p>Cuántas filas y columnas tiene.</p></div>
+        <div class="cmd-card frag"><code>.info()</code><p>Tipo de dato de cada columna, y cuántos valores no nulos tiene.</p></div>
+        <div class="cmd-card frag"><code>.dtypes</code><p>Solo los tipos de dato, en una tabla más corta.</p></div>
+        <div class="cmd-card frag"><code>.describe()</code><p>Estadísticos rápidos — los mismos que calcularon a mano en sesión 1.</p></div>
+      </div>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Estos cuatro son literalmente lo primero que se hace con cualquier dataset nuevo, en cualquier proyecto real — vale la pena que se vuelvan reflejo.</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide">
+    <div class="slide-badge">🕳️</div>
+    <div class="slide-inner">
+      <div class="kicker">Paso 3 · Valores faltantes</div>
+      <h1><code class="font-mono text-amber">.isna().sum()</code></h1>
+      <p class="body">Con <code class="font-mono">.info()</code> ya se nota si a una columna le faltan valores. <code class="font-mono">.isna()</code> marca cada valor como faltante o no, y encadenado con <code class="font-mono">.sum()</code> cuenta cuántos hay por columna.</p>
+      <pre class="code"><span class="k">df</span>.isna().sum()
+<span class="c"># reviews_per_month    10052</span>
+<span class="c"># last_review          10052</span>
+<span class="c"># name                     16</span>
+<span class="c"># host_name                21</span></pre>
+      <p class="caption">Ojo: <strong>faltante no siempre significa error.</strong> Un anuncio sin reseñas no tiene <code class="font-mono">last_review</code> porque nunca lo han reseñado — es información real, no un dato roto.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Esta distinción (nulo = error vs. nulo = información real) es la que van a necesitar para decidir bien qué hacer con cada columna en el notebook 2.</p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide">
+    <div class="slide-badge">📊</div>
+    <div class="slide-inner">
+      <div class="kicker">Paso 4 · Ya lo saben de sesión 1</div>
+      <h1>Las mismas medidas, ahora en una línea</h1>
+      <p class="body frag">En sesión 1 calcularon media, mediana, moda y desviación estándar a mano, sobre listas de Python. Pandas hace exactamente lo mismo, sobre una columna completa:</p>
+      <pre class="code frag"><span class="k">df</span>[<span class="s">'price'</span>].mean()
+<span class="k">df</span>[<span class="s">'price'</span>].median()
+<span class="k">df</span>[<span class="s">'price'</span>].mode()[<span class="o">0</span>]
+<span class="k">df</span>[<span class="s">'price'</span>].std()</pre>
+      <p class="quote frag">La diferencia: en sesión 1 lo hicieron sobre 8 o 30 datos. Hoy lo hacen sobre <strong>48.895</strong> — y van a ver la misma señal de alarma (media muy distinta de la mediana) que ya vieron con el ejemplo de salarios y con TiendaExpress.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Este es el gancho hacia el "algo no cuadra" del notebook 1 — no reveles todavía qué es raro, solo plantea que van a reconocer la señal.</p>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide">
+    <div class="slide-badge">🎯</div>
+    <div class="slide-inner">
+      <div class="kicker">Paso 5 · Detectar atípicos</div>
+      <h1><code class="font-mono text-amber">.quantile()</code></h1>
+      <p class="body">Ya usaron <code class="font-mono">.describe()</code>, pero para ver bien los extremos conviene mirar percentiles específicos.</p>
+      <pre class="code"><span class="k">df</span>[<span class="s">'price'</span>].quantile([<span class="o">0.01</span>, <span class="o">0.25</span>, <span class="o">0.5</span>, <span class="o">0.75</span>, <span class="o">0.99</span>, <span class="o">1.0</span>])</pre>
+      <p class="caption">Si el percentil 100% (el máximo) está muchísimo más lejos que el percentil 50% (la mediana), eso es una señal de valores atípicos — exactamente lo que van a encontrar con el precio de algunos anuncios.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Van a encontrar anuncios en $0 (error de carga, no un Airbnb gratis) y anuncios por encima de $1000 — pídeles que hagan sus propias hipótesis antes de confirmarlo en el notebook.</p>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide">
+    <div class="slide-badge">🧹</div>
+    <div class="slide-inner">
+      <div class="kicker">Paso 6 · Limpieza de texto</div>
+      <h1>El accesor <code class="font-mono text-amber">.str</code></h1>
+      <p class="body">En sesión 1 limpiaron texto en Python puro, un valor a la vez, con <code class="font-mono">.strip()</code>, <code class="font-mono">.title()</code>. Pandas tiene el accesor <code class="font-mono">.str</code>, que aplica exactamente esos mismos métodos — pero a una columna <strong>completa</strong> de una sola vez.</p>
+      <pre class="code"><span class="k">df</span>[<span class="s">'name'</span>] = <span class="k">df</span>[<span class="s">'name'</span>].str.strip().str.title()
+<span class="k">df</span>[<span class="s">'host_name'</span>] = <span class="k">df</span>[<span class="s">'host_name'</span>].str.strip().str.title()</pre>
+      <p class="quote">Mismo método, misma lógica — la única diferencia es el <code class="font-mono">.str</code> al frente, que le dice a Pandas "aplica esto a cada valor de la columna".</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Este es el momento "ajá" de conexión directa con sesión 1 — insiste en que no es nada nuevo, es lo mismo con un prefijo.</p>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide">
+    <div class="slide-badge">🩹</div>
+    <div class="slide-inner">
+      <div class="kicker">Paso 7 · Rellenar nulos</div>
+      <h1><code class="font-mono text-amber">.fillna()</code></h1>
+      <p class="body">Para <code class="font-mono">reviews_per_month</code>: sin reseñas = 0 reseñas por mes. Tiene sentido rellenar con 0 en vez de eliminar esas filas — eliminar borraría miles de anuncios válidos, solo porque no tienen reseñas.</p>
+      <pre class="code"><span class="k">df</span>[<span class="s">'reviews_per_month'</span>] = <span class="k">df</span>[<span class="s">'reviews_per_month'</span>].fillna(<span class="o">0</span>)</pre>
+      <p class="caption">No siempre 0 es la respuesta correcta — depende de qué significa el nulo en esa columna en particular. Aquí sí tiene sentido; en otra columna podría no tenerlo.</p>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p>Conecta con la diapositiva de "faltante no siempre es error" — aquí es donde esa distinción se convierte en una decisión de código.</p>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide">
+    <div class="slide-badge">✂️</div>
+    <div class="slide-inner">
+      <div class="kicker">Paso 8 · Filtrar atípicos</div>
+      <h1>Quedarse solo con lo razonable</h1>
+      <p class="body">Con los percentiles que ya calcularon, pueden filtrar el DataFrame para quedarse solo con los datos dentro de un rango razonable.</p>
+      <pre class="code"><span class="k">p1</span> = df[<span class="s">'price'</span>].quantile(<span class="o">0.01</span>)
+<span class="k">p99</span> = df[<span class="s">'price'</span>].quantile(<span class="o">0.99</span>)
+
+<span class="k">df_limpio</span> = df[(df[<span class="s">'price'</span>] >= p1) & (df[<span class="s">'price'</span>] &lt;= p99)]</pre>
+      <p class="quote">Esto es exactamente lo mismo que hicieron con el <code class="font-mono">for</code> + <code class="font-mono">if</code> en sesión 1 para filtrar una lista — solo que ahora Pandas lo hace sobre toda la columna en una sola línea.</p>
+    </div>
+    <div class="notes" data-time="2 min">
+      <p>Vale la pena escribirlo en el tablero remarcando el paralelismo con el patrón for+if de la sesión pasada — es el mismo razonamiento, distinta sintaxis.</p>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide">
+    <div class="slide-badge">👯</div>
+    <div class="slide-inner">
+      <div class="kicker">Un método más que van a necesitar</div>
+      <h1><code class="font-mono text-amber">.duplicated()</code> y <code class="font-mono text-amber">.drop_duplicates()</code></h1>
+      <p class="body">Antes de confiar en cualquier análisis, vale la pena revisar si hay filas repetidas por accidente (por ejemplo, un mismo anuncio cargado dos veces).</p>
+      <pre class="code"><span class="k">df</span>.duplicated().sum()      <span class="c"># cuántas filas están repetidas</span>
+<span class="k">df</span> = df.drop_duplicates() <span class="c"># se queda con una sola copia de cada una</span></pre>
+      <p class="caption">Un duplicado no siempre "se ve" distinto a un valor atípico — pero es un problema distinto: no es que el valor esté mal, es que <strong>la misma fila está contada más de una vez</strong>, y eso infla cualquier conteo o promedio.</p>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p><strong>Nota para el profesor:</strong> este paso todavía no está en los notebooks de Airbnb de hoy — lo agregué aquí para cubrir "gestión de duplicados" del microcurrículo. Si hay tiempo, vale la pena correrlo en vivo sobre el propio `df` de Airbnb (probablemente dé 0 duplicados exactos, lo cual también es una lección válida: "revisamos y no había, pero siempre se revisa").</p>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide">
+    <div class="slide-badge">✅</div>
+    <div class="slide-inner">
+      <div class="kicker">Repaso rápido</div>
+      <h1>Marca los que ya reconoces</h1>
+      <ul id="methodChecklist" class="flex flex-col gap-2.5 list-none m-0 p-0">
+        <li><label class="method-check"><input type="checkbox"><span class="method-box"></span><span class="text-base sm:text-lg">Cargar: <code class="font-mono">read_csv()</code></span></label></li>
+        <li><label class="method-check"><input type="checkbox"><span class="method-box"></span><span class="text-base sm:text-lg">Explorar: <code class="font-mono">.shape</code> · <code class="font-mono">.info()</code> · <code class="font-mono">.dtypes</code> · <code class="font-mono">.describe()</code></span></label></li>
+        <li><label class="method-check"><input type="checkbox"><span class="method-box"></span><span class="text-base sm:text-lg">Nulos: <code class="font-mono">.isna().sum()</code> · <code class="font-mono">.fillna()</code></span></label></li>
+        <li><label class="method-check"><input type="checkbox"><span class="method-box"></span><span class="text-base sm:text-lg">Estadísticas: <code class="font-mono">.mean()</code> · <code class="font-mono">.median()</code> · <code class="font-mono">.mode()</code> · <code class="font-mono">.std()</code></span></label></li>
+        <li><label class="method-check"><input type="checkbox"><span class="method-box"></span><span class="text-base sm:text-lg">Atípicos: <code class="font-mono">.quantile()</code> · filtrado con máscara booleana</span></label></li>
+        <li><label class="method-check"><input type="checkbox"><span class="method-box"></span><span class="text-base sm:text-lg">Texto: <code class="font-mono">.str.strip()</code> · <code class="font-mono">.str.title()</code></span></label></li>
+        <li><label class="method-check"><input type="checkbox"><span class="method-box"></span><span class="text-base sm:text-lg">Duplicados: <code class="font-mono">.duplicated()</code> · <code class="font-mono">.drop_duplicates()</code></span></label></li>
+      </ul>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p>Dinámica nueva: checklist marcable, solo para que cada quien vea de un vistazo cuánto ya reconoce antes de abrir el notebook — no se guarda ni se evalúa.</p>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide">
+    <div class="slide-badge">🚀</div>
+    <div class="slide-inner">
+      <div class="kicker">Manos a la obra</div>
+      <h1>A su notebook — todo esto, aplicado</h1>
+      <p class="quote">Cada método que acaban de ver aparece, en el mismo orden, en los dos notebooks de práctica de hoy: primero cargar y explorar, después limpiar.</p>
+    </div>
+    <div class="notes" data-time="1 min">
+      <p>Transición directa al notebook 1 (carga y primeros pasos).</p>
+    </div>
+  </section>
+
+</div>
+
+<button class="navzone" id="prevZone" aria-label="Anterior">‹</button>
+<button class="navzone" id="nextZone" aria-label="Siguiente">›</button>
+
+<div id="toolbar">
+  <button id="notesToggle" title="Mostrar/ocultar notas del expositor (N)">Notas: off</button>
+  <button id="commentsToggle" title="Mostrar/ocultar tus comentarios (C)">💬 Comentarios</button>
+</div>
+
+<div id="notesPanel">
+  <h4><span class="time" id="notesTime"></span></h4>
+  <div id="notesBody"></div>
+</div>
+
+<div id="commentsPanel">
+  <h4 id="commentsSlideLabel"></h4>
+  <textarea id="commentsText" placeholder="Escribe aquí tus comentarios sobre esta diapositiva: qué cambiar, qué quitar, qué agregar…"></textarea>
+  <div class="comments-actions">
+    <button id="commentsClear" type="button">Borrar este comentario</button>
+    <button id="commentsExport" type="button">⬇ Exportar todos (.md)</button>
+    <span id="commentsCount" class="hint"></span>
+  </div>
+</div>
+
+<div id="footer">
+  <span class="course">Introducción a la Ciencia de Datos · Sesión 2 · Métodos de Pandas</span>
+  <span id="counter" class="hint">1 / 12</span>
+  <span class="hint">→ / espacio: siguiente / revela viñeta · ←: anterior · N: notas · C: comentarios · F: pantalla completa</span>
+</div>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let current = 0;
+  let fragIndex = 0;
+
+  document.querySelectorAll('.slide .points li').forEach(li => li.classList.add('frag'));
+
+  const progress = document.getElementById('progress');
+  const counter = document.getElementById('counter');
+  const notesToggle = document.getElementById('notesToggle');
+  const notesPanel = document.getElementById('notesPanel');
+  const notesBody = document.getElementById('notesBody');
+  const notesTime = document.getElementById('notesTime');
+
+  const commentsToggle = document.getElementById('commentsToggle');
+  const commentsPanel = document.getElementById('commentsPanel');
+  const commentsText = document.getElementById('commentsText');
+  const commentsSlideLabel = document.getElementById('commentsSlideLabel');
+  const commentsCount = document.getElementById('commentsCount');
+  const commentsClear = document.getElementById('commentsClear');
+  const commentsExport = document.getElementById('commentsExport');
+
+  const COMMENTS_KEY = 'pandas_metodos_comments_v1';
+  function loadComments(){
+    try { return JSON.parse(localStorage.getItem(COMMENTS_KEY) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function saveComments(){
+    try { localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments)); }
+    catch(e){ /* localStorage no disponible, se pierde al recargar */ }
+  }
+  let comments = loadComments();
+
+  function slideTitle(idx){
+    const h1 = slides[idx].querySelector('h1');
+    return h1 ? h1.textContent.trim() : ('Diapositiva ' + (idx + 1));
+  }
+
+  function updateCommentsCount(){
+    const n = Object.keys(comments).filter(k => comments[k] && comments[k].trim()).length;
+    commentsCount.textContent = n ? (n + ' diapositiva' + (n === 1 ? '' : 's') + ' con comentarios') : 'Sin comentarios guardados todavía';
+  }
+
+  function renderComments(){
+    commentsSlideLabel.textContent = 'Comentarios — diapositiva ' + (current + 1) + ' / ' + total + ': ' + slideTitle(current);
+    commentsText.value = comments[current] || '';
+    updateCommentsCount();
+  }
+
+  function renderNotes(){
+    const n = slides[current].querySelector('.notes');
+    notesBody.innerHTML = n ? n.innerHTML : '<p>(Sin notas para esta diapositiva)</p>';
+    notesTime.textContent = n && n.dataset.time ? ('Tiempo sugerido: ' + n.dataset.time) : '';
+  }
+
+  function currentFrags(){
+    return Array.from(slides[current].querySelectorAll('.frag'));
+  }
+
+  function setupFragments(dir){
+    const frags = currentFrags();
+    if (dir === 'backward') {
+      frags.forEach(f => f.classList.add('shown'));
+      fragIndex = frags.length;
+    } else {
+      frags.forEach(f => f.classList.remove('shown'));
+      fragIndex = 0;
+    }
+  }
+
+  function goTo(i){
+    const target = Math.max(0, Math.min(total - 1, i));
+    const dir = target < current ? 'backward' : 'forward';
+    current = target;
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === current));
+    progress.style.width = (((current + 1) / total) * 100) + '%';
+    counter.textContent = (current + 1) + ' / ' + total;
+    setupFragments(dir);
+    if (notesPanel.classList.contains('open')) renderNotes();
+    if (commentsPanel.classList.contains('open')) renderComments();
+    location.hash = 'slide-' + (current + 1);
+  }
+
+  function next(){
+    const frags = currentFrags();
+    if (fragIndex < frags.length) {
+      frags[fragIndex].classList.add('shown');
+      fragIndex++;
+      return;
+    }
+    goTo(current + 1);
+  }
+  function prev(){
+    if (fragIndex > 0) {
+      const frags = currentFrags();
+      fragIndex--;
+      frags[fragIndex].classList.remove('shown');
+      return;
+    }
+    goTo(current - 1);
+  }
+
+  function toggleNotes(){
+    const opening = !notesPanel.classList.contains('open');
+    notesPanel.classList.toggle('open', opening);
+    notesToggle.classList.toggle('active', opening);
+    notesToggle.textContent = 'Notas: ' + (opening ? 'on' : 'off');
+    if (opening) {
+      commentsPanel.classList.remove('open');
+      commentsToggle.classList.remove('active');
+      commentsToggle.textContent = '💬 Comentarios';
+      renderNotes();
+    }
+  }
+
+  function toggleComments(){
+    const opening = !commentsPanel.classList.contains('open');
+    commentsPanel.classList.toggle('open', opening);
+    commentsToggle.classList.toggle('active', opening);
+    commentsToggle.textContent = opening ? '💬 Comentarios: on' : '💬 Comentarios';
+    if (opening) {
+      notesPanel.classList.remove('open');
+      notesToggle.classList.remove('active');
+      notesToggle.textContent = 'Notas: off';
+      renderComments();
+    }
+  }
+
+  function exportComments(){
+    const entries = Object.keys(comments)
+      .map(k => parseInt(k, 10))
+      .filter(idx => comments[idx] && comments[idx].trim())
+      .sort((a, b) => a - b);
+    if (!entries.length) {
+      alert('Todavía no hay comentarios guardados en ninguna diapositiva.');
+      return;
+    }
+    let md = '# Comentarios — Sesión 2: Métodos de Pandas\n\n';
+    entries.forEach(idx => {
+      md += '## Diapositiva ' + (idx + 1) + ': ' + slideTitle(idx) + '\n\n' + comments[idx].trim() + '\n\n';
+    });
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'comentarios-sesion-02-metodos-pandas.md';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(md).catch(() => {});
+    }
+  }
+
+  function toggleFullscreen(){
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(()=>{});
+    } else {
+      document.exitFullscreen().catch(()=>{});
+    }
+  }
+
+  function setupPredictRows(){
+    document.querySelectorAll('[data-predict-group]').forEach(row => {
+      const feedback = row.parentElement.querySelector('.predict-feedback');
+      row.querySelectorAll('.predict-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (row.dataset.answered) return;
+          row.dataset.answered = '1';
+          row.querySelectorAll('.predict-btn').forEach(b => {
+            if (b.dataset.correct === 'true') b.classList.add('correct');
+            else if (b === btn) b.classList.add('incorrect');
+            else b.classList.add('dim');
+          });
+          if (feedback) feedback.classList.add('shown');
+        });
+      });
+    });
+  }
+  setupPredictRows();
+
+  document.getElementById('prevZone').addEventListener('click', prev);
+  document.getElementById('nextZone').addEventListener('click', next);
+  notesToggle.addEventListener('click', toggleNotes);
+  commentsToggle.addEventListener('click', toggleComments);
+  commentsExport.addEventListener('click', exportComments);
+  commentsClear.addEventListener('click', () => {
+    delete comments[current];
+    saveComments();
+    renderComments();
+  });
+  commentsText.addEventListener('input', () => {
+    comments[current] = commentsText.value;
+    saveComments();
+    updateCommentsCount();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const tag = e.target && e.target.tagName;
+    if (tag === 'TEXTAREA' || tag === 'INPUT') {
+      if (e.key === 'Escape') { e.target.blur(); }
+      return;
+    }
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if (e.key.toLowerCase() === 'n') { toggleNotes(); }
+    else if (e.key.toLowerCase() === 'c') { toggleComments(); }
+    else if (e.key.toLowerCase() === 'f') { toggleFullscreen(); }
+    else if (e.key === 'Home') { goTo(0); }
+    else if (e.key === 'End') { goTo(total - 1); }
+  });
+
+  const hashMatch = location.hash.match(/slide-(\d+)/);
+  const startAt = hashMatch ? (parseInt(hashMatch[1], 10) - 1) : 0;
+  goTo(isNaN(startAt) ? 0 : startAt);
+})();
+</script>
+
+</body>
+</html>
